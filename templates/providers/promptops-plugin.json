@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "your-handle.openrouter-usage",
+  "name": "OpenRouter Usage",
+  "version": "0.1.0",
+  "category": "providers",
+  "description": "Shows how much of your OpenRouter credit is used, in the Usage section.",
+  "minAppVersion": "2.1.0",
+  "entry": "dist/plugin.js",
+  "permissions": ["net:openrouter.ai", "secrets"],
+  "config": {
+    "fields": [
+      { "key": "apiKey", "type": "secret", "label": "OpenRouter API key", "required": true }
+    ]
+  }
+}

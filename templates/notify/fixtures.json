@@ -1,0 +1,5 @@
+{
+  "http": [
+    { "method": "POST", "url": "https://discord.com/api/webhooks/*", "status": 204, "body": "" }
+  ]
+}

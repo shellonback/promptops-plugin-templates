@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "your-handle.review-pack",
+  "name": "Code Review Pack",
+  "version": "0.1.0",
+  "category": "agent",
+  "description": "A skill and two quick actions for careful code reviews.",
+  "minAppVersion": "2.1.0",
+  "entry": "dist/plugin.js",
+  "permissions": [],
+  "contributes": {
+    "skills": [
+      { "id": "review-checklist", "title": "Review checklist", "description": "What to check before approving a change", "file": "skills/review-checklist.md" }
+    ],
+    "quickActions": [
+      { "id": "review-diff", "title": "Review my diff", "prompt": "Review the current diff. Follow the review checklist skill. Report findings ordered by severity, with file and line." },
+      { "id": "explain-change", "title": "Explain this change", "prompt": "Explain what the current diff changes and why, in plain language, for a teammate who has not seen the code." }
+    ]
+  }
+}

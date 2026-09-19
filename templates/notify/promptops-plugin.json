@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "your-handle.discord-notifier",
+  "name": "Discord Notifier",
+  "version": "0.1.0",
+  "category": "notify",
+  "description": "Posts a message to a Discord channel when an agent finishes a turn or asks for approval.",
+  "minAppVersion": "2.1.0",
+  "entry": "dist/plugin.js",
+  "permissions": ["net:discord.com", "secrets", "sessions:read", "notify"],
+  "config": {
+    "fields": [
+      { "key": "webhookPath", "type": "secret", "label": "Webhook path: the part after /api/webhooks/", "required": true },
+      { "key": "onlyFailures", "type": "boolean", "label": "Only notify when a turn fails", "default": false }
+    ]
+  },
+  "contributes": {
+    "actions": [{ "id": "send-test", "title": "Send a test message", "contexts": ["workspace"] }]
+  }
+}

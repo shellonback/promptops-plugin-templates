@@ -1,0 +1,5 @@
+{
+  "http": [
+    { "method": "GET", "url": "https://openrouter.ai/api/v1/key", "body": { "data": { "label": "sk-or-v1-abc…", "usage": 12.4381, "limit": 50, "is_free_tier": false, "rate_limit": { "requests": 200, "interval": "10s" } } } }
+  ]
+}

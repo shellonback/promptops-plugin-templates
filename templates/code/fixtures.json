@@ -1,0 +1,13 @@
+{
+  "http": [
+    { "method": "GET", "url": "https://api.github.com/repos/*/pulls?*", "body": [
+      { "number": 128, "title": "Keep the return URL across the login redirect", "user": { "login": "devon" }, "state": "open", "draft": false, "html_url": "https://github.com/octo-org/storefront/pull/128", "head": { "ref": "fix/login-return-url", "sha": "9f2c1e7" }, "updated_at": "2026-09-14T10:00:00Z" },
+      { "number": 131, "title": "Orders CSV export", "user": { "login": "marta" }, "state": "open", "draft": true, "html_url": "https://github.com/octo-org/storefront/pull/131", "head": { "ref": "feature/orders-csv", "sha": "41ab77d" }, "updated_at": "2026-09-15T08:30:00Z" }
+    ] },
+    { "method": "GET", "url": "https://api.github.com/repos/*/commits/*/check-runs*", "body": { "check_runs": [
+      { "name": "unit tests", "status": "completed", "conclusion": "success", "html_url": "https://github.com/octo-org/storefront/runs/1" },
+      { "name": "lint", "status": "completed", "conclusion": "failure", "html_url": "https://github.com/octo-org/storefront/runs/2" },
+      { "name": "e2e", "status": "in_progress", "conclusion": null, "html_url": "https://github.com/octo-org/storefront/runs/3" }
+    ] } }
+  ]
+}

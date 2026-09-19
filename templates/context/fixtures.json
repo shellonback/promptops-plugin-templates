@@ -1,0 +1,12 @@
+{
+  "http": [
+    { "method": "GET", "url": "https://en.wikipedia.org/w/api.php?*list=search*", "body": { "query": { "search": [
+      { "pageid": 101, "title": "Prompt engineering", "snippet": "<span>Prompt engineering</span> is the process of structuring an instruction that a generative model can interpret.", "timestamp": "2026-08-30T10:00:00Z" },
+      { "pageid": 102, "title": "Large language model", "snippet": "A large language model is a model trained on vast amounts of text.", "timestamp": "2026-09-02T10:00:00Z" },
+      { "pageid": 103, "title": "Chain-of-thought prompting", "snippet": "A technique that asks a model to reason step by step.", "timestamp": "2026-07-19T10:00:00Z" }
+    ] } } },
+    { "method": "GET", "url": "https://en.wikipedia.org/w/api.php?*prop=extracts*pageids=101*", "body": { "query": { "pages": { "101": { "title": "Prompt engineering", "extract": "Prompt engineering is the process of structuring or crafting an instruction in order to produce better outputs from a generative model.\n\nA prompt is natural language text describing the task that the model should perform. It can be a query, a command, or a longer statement including context, instructions and conversation history." } } } } },
+    { "method": "GET", "url": "https://en.wikipedia.org/w/api.php?*prop=extracts*pageids=102*", "body": { "query": { "pages": { "102": { "title": "Large language model", "extract": "A large language model (LLM) is a language model trained with self-supervised learning on a vast amount of text." } } } } },
+    { "method": "GET", "url": "https://en.wikipedia.org/w/api.php?*prop=extracts*pageids=103*", "body": { "query": { "pages": { "103": { "title": "Chain-of-thought prompting", "extract": "Chain-of-thought prompting asks the model to produce intermediate reasoning steps before the final answer." } } } } }
+  ]
+}

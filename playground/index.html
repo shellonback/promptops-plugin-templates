@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PromptOps Plugin Playground</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="playground.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">
+      <img class="icon" src="icon.png" alt="">
+      <img class="word logo-dark" src="logo-dark.png" alt="PromptOps">
+      <img class="word logo-light" src="logo-light.png" alt="PromptOps">
+      <span class="sep"></span>
+      <span class="where">Plugin Playground</span>
+    </div>
+    <label class="field-inline">Plugin <select id="picker"></select></label>
+    <div class="seg" role="group" aria-label="Network mode">
+      <button id="mode-fixtures" class="on" title="Answers come from fixtures.json. Works offline.">Fixtures</button>
+      <button id="mode-live" title="Real HTTPS calls, through the same rules as the app.">Live</button>
+    </div>
+    <button id="reload" class="btn">Reload plugin</button>
+    <span class="grow"></span>
+    <span id="sandbox-state" class="chip">starting</span>
+  </header>
+
+  <main class="grid">
+    <section class="col" id="left"></section>
+    <section class="col" id="center"></section>
+    <section class="col" id="right">
+      <div class="card">
+        <div class="card-h">Activity <span class="muted small">everything the plugin asked for</span><span class="grow"></span><button id="clear-log" class="btn sm">Clear</button></div>
+        <div id="log" class="log"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toasts" class="toasts"></div>
+  <div id="modal-root"></div>
+  <script src="playground.js" type="module"></script>
+</body>
+</html>
