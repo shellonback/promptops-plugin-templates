@@ -147,7 +147,8 @@ If you keep several plugins in one repository of yours, give each its own folder
 ```
 playground/   the test page and the local broker (server.mjs)
 templates/    one starter plugin per section
-tools/        new-plugin.mjs, validate.mjs, screenshots.mjs
+tools/        new-plugin.mjs, validate.mjs, index-entry.mjs, screenshots.mjs
+registry/     official.json: the official plugins, each pinned to a commit and a bundle hash
 docs/         CONTRACTS.md, SECURITY.md, screenshots
 ```
 

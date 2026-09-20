@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "note": "Official PromptOps plugins. The app reads this index when the plugin registry of its server is not available. Every entry pins a commit and the SHA-256 of the bundle: the app downloads the bundle from GitHub itself and refuses it if the hash differs.",
+  "plugins": [
+    {
+      "plugin_id": "promptops.clickup",
+      "slug": "clickup",
+      "name": "ClickUp",
+      "category": "tasks",
+      "description": "Brings the tasks of your ClickUp lists into the Teams board and keeps their status in sync.",
+      "repo_url": "https://github.com/shellonback/promptops-plugin-clickup",
+      "status": "published",
+      "version": "0.1.0",
+      "commit_sha": "8b72236400f86d61a46cdac526c792b3b6f90657",
+      "bundle_sha256": "67c70bb6b74c6be1b8e373e73f700db65fc90413851790305478a2cfa5f7b877",
+      "source_dir": null,
+      "manifest": {
+        "schemaVersion": 1,
+        "id": "promptops.clickup",
+        "name": "ClickUp",
+        "version": "0.1.0",
+        "category": "tasks",
+        "description": "Brings the tasks of your ClickUp lists into the Teams board and keeps their status in sync.",
+        "repository": "https://github.com/shellonback/promptops-plugin-clickup",
+        "minAppVersion": "2.1.0",
+        "entry": "dist/plugin.js",
+        "permissions": [
+          "net:api.clickup.com",
+          "secrets",
+          "tasks:read",
+          "tasks:write",
+          "prompt:propose"
+        ],
+        "config": {
+          "fields": [
+            {
+              "key": "token",
+              "type": "secret",
+              "label": "ClickUp personal API token (starts with pk_)",
+              "required": true
+            },
+            {
+              "key": "includeSubtasks",
+              "type": "boolean",
+              "label": "Include subtasks",
+              "default": false
+            }
+          ]
+        },
+        "contributes": {
+          "actions": [
+            {
+              "id": "task-to-agent",
+              "title": "Propose to agent",
+              "contexts": [
+                "task"
+              ]
+            }
+          ]
+        }
+      },
+      "publisher": {
+        "handle": "promptops",
+        "display_name": "PromptOps",
+        "kind": "team",
+        "verified": true
+      },
+      "updated_at": "2026-09-20T20:11:46.000Z"
+    }
+  ]
+}

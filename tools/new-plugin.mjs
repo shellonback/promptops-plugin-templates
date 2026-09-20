@@ -28,6 +28,7 @@ if (await stat(to).catch(() => null)) { console.error(`\n  ✗ ${to} already exi
 await cp(from, to, { recursive: true });
 const file = join(to, 'promptops-plugin.json');
 const manifest = { ...JSON.parse(await readFile(file, 'utf8')), id, name };
+delete manifest.repository; // yours is different: add it once your repository exists
 await writeFile(file, JSON.stringify(manifest, null, 2) + '\n');
 
 // The template README explains the template. Your repository needs a README about YOUR plugin.

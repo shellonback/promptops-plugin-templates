@@ -158,5 +158,6 @@ promptops.actions.register('send-test', async (context, sdk) => { /* ... */ });
 | `permissions` | Array. `net:<host>` per host, plus any of `secrets`, `storage`, `notify`, `sessions:read`, `tasks:read`, `tasks:write`, `prompt:propose`, `agents:propose` |
 | `config.fields` | `[{ key, type, label, required?, default?, options? }]` with `type`: `text`, `secret`, `number`, `boolean`, `select`, `multiselect`, `url`. PromptOps builds the form |
 | `description` | Shown in the catalog |
+| `repository` | Optional. Your public GitHub repository, as `https://github.com/owner/name`. PromptOps shows the owner and its avatar next to the plugin |
 
 Hosts must be public domain names. No IP addresses, wildcards, `localhost` or internal domains.
