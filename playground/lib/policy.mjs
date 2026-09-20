@@ -3,11 +3,15 @@
 import { createHash } from 'node:crypto';
 import { isIP } from 'node:net';
 
-export const CATEGORIES = ['tasks', 'code', 'data', 'providers', 'agent', 'context', 'notify'];
+export const CATEGORIES = ['tasks', 'code', 'data', 'providers', 'agent', 'context', 'notify', 'pages'];
 
 export const ALLOWED_PERMISSIONS = [
   'secrets', 'storage', 'notify', 'sessions:read', 'tasks:read', 'tasks:write', 'prompt:propose', 'agents:propose',
+  // Section `pages` only. Each one goes through a choice or a confirmation by the person.
+  'git:read', 'workspace:write', 'ai:generate',
 ];
+export const PAGES_ONLY_PERMISSIONS = ['git:read', 'workspace:write', 'ai:generate'];
+export const MAX_MENU_PAGES = 3;
 
 export const PERMISSION_TEXT = {
   secrets: 'Use the credentials you configure, without ever reading them',
@@ -18,6 +22,9 @@ export const PERMISSION_TEXT = {
   'tasks:write': 'Create and update tasks of the project where it is active',
   'prompt:propose': 'Propose a prompt that you review before it is sent',
   'agents:propose': 'Propose starting an agent, which you confirm',
+  'git:read': 'Read branch, changed files, commits and diff of a repository you pick on its page',
+  'workspace:write': 'Write text files in the docs/ folder of that repository. You confirm every file',
+  'ai:generate': 'Run a prompt on your own Claude, with no tools and no file access. You see and confirm every prompt',
 };
 
 export const describePermission = (p) => (p.startsWith('net:') ? `Connect to ${p.slice(4)} over HTTPS` : PERMISSION_TEXT[p] ?? p);
@@ -30,6 +37,14 @@ export const validPluginId = (id) => typeof id === 'string' && id.split('.').len
 export const validRelPath = (p, ext) =>
   typeof p === 'string' && p.length <= 200 && !p.includes('..') && !p.startsWith('/') && !p.startsWith('.') &&
   /^[A-Za-z0-9_./-]+$/.test(p) && p.toLowerCase().endsWith('.' + ext);
+
+/** Where `workspace.writeFile` may write: docs/<...>.md|markdown|txt, nothing hidden, nothing above. */
+export const validDocsPath = (p) =>
+  typeof p === 'string' && p.startsWith('docs/') && p.length > 5 && !p.split('/').some((seg) => !seg || seg.startsWith('.')) &&
+  ['md', 'markdown', 'txt'].some((ext) => validRelPath(p, ext));
+
+/** An icon becomes a CSS class in the app: only a well-formed Tabler name is accepted. */
+export const validIcon = (icon) => typeof icon === 'string' && /^ti-[a-z0-9-]{2,45}$/.test(icon);
 
 export function isPublicHostname(host) {
   host = String(host).toLowerCase();
@@ -73,6 +88,27 @@ export function validateManifest(m) {
       if (isPublicHostname(host)) hosts.push(host.toLowerCase());
       else errors.push(`\`${p}\`: the host must be a public domain name. No IP addresses, wildcards, localhost or internal domains.`);
     } else if (!ALLOWED_PERMISSIONS.includes(p)) errors.push(`\`${p}\` is not a permission the runtime offers.`);
+  }
+  // Menu entries and the permissions that come with them belong to the `pages` section only.
+  const pages = m.contributes?.pages;
+  const restricted = (Array.isArray(m.permissions) ? m.permissions : []).filter((p) => PAGES_ONLY_PERMISSIONS.includes(p));
+  if (m.category !== 'pages') {
+    if (Array.isArray(pages) && pages.length) errors.push('Only a `pages` plugin can declare `contributes.pages`.');
+    if (restricted.length) errors.push('Reserved to the `pages` section: ' + restricted.join(', ') + '.');
+  } else if (!Array.isArray(pages) || !pages.length || pages.length > MAX_MENU_PAGES) {
+    errors.push('A `pages` plugin declares 1 to ' + MAX_MENU_PAGES + ' entries in `contributes.pages`.');
+  } else {
+    const ids = new Set();
+    for (const p of pages) {
+      const title = typeof p?.title === 'string' ? p.title.trim() : '';
+      if (!slugOk(p?.id ?? '') || ids.has(p.id)) errors.push('`contributes.pages[].id` must be a unique lowercase slug, for example `writer`.');
+      if (!title || [...title].length > 40 || /[\u0000-\u001f\u007f]/.test(title)) errors.push('`contributes.pages[].title` is required, 40 characters at most. It is the menu label.');
+      if (p?.icon !== undefined && !validIcon(p.icon)) errors.push('`contributes.pages[].icon` must be a Tabler icon name, for example `ti-file-pencil`.');
+      ids.add(p?.id);
+    }
+  }
+  if (restricted.includes('git:read') && hosts.length) {
+    warnings.push('`git:read` together with `net:` lets repository content leave the device. The reviewer will check what is sent to ' + hosts.join(', ') + '.');
   }
   for (const f of m.config?.fields ?? []) {
     if (!f?.key || !['text', 'secret', 'number', 'boolean', 'select', 'multiselect', 'url'].includes(f.type)) {

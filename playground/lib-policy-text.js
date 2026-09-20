@@ -8,5 +8,8 @@ const TEXT = {
   'tasks:write': 'Create and update tasks of the project where it is active',
   'prompt:propose': 'Propose a prompt that you review before it is sent',
   'agents:propose': 'Propose starting an agent, which you confirm',
+  'git:read': 'Read branch, changed files, commits and diff of a repository you pick on its page',
+  'workspace:write': 'Write text files in the docs/ folder of that repository. You confirm every file',
+  'ai:generate': 'Run a prompt on your own Claude, with no tools and no file access. You see and confirm every prompt',
 };
 export const describePermission = (p) => (p.startsWith('net:') ? `Connect to ${p.slice(4)} over HTTPS` : TEXT[p] ?? p);

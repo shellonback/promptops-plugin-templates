@@ -60,6 +60,7 @@ A plugin belongs to exactly one section. Start from the template of that section
 | `context` | [templates/context](templates/context) | Documents to use as context | Prompts › Project Brief |
 | `notify` | [templates/notify](templates/notify) | Messages sent when something happens | Notifications |
 | `agent` | [templates/agent](templates/agent) | Skills and quick actions, no code | Spawn composer |
+| `pages` | [templates/pages](templates/pages) | A tool with its own page, described as data | Its own entry in the sidebar menu |
 
 Exact method names, arguments and return shapes are in [docs/CONTRACTS.md](docs/CONTRACTS.md).
 
@@ -160,6 +161,7 @@ docs/         CONTRACTS.md, SECURITY.md, screenshots
 | Calling your section contract from the app | Working. Test it in **Plugins › Installed › Test contract** |
 | Section screens drawing your data: board, usage, explorers | Being connected. Until then the playground is the visual reference |
 | `agent` skills and quick actions | Playground only for now |
+| `pages`: menu entry, repository, saving in `docs/`, Claude with no tools | Work in the desktop app on macOS. Linux to be verified, `ai:generate` not yet on Windows |
 
 Contracts are version 0. They can still change before the section screens ship.
 

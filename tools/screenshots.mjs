@@ -25,6 +25,7 @@ const DEFAULT_SHOTS = [
   ['providers', 'providers', null],
   ['notify', 'notify', "document.querySelector('#center .btn.primary')?.click()"],
   ['agent', 'agent', null],
+  ['pages', 'pages', "(async () => { const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const pick = document.querySelector('#center .pg-page select'); pick.value = 'repo_playground'; pick.dispatchEvent(new Event('change')); await wait(700); document.querySelector('#center .pg-page .btn.primary')?.click(); await wait(500); document.querySelector('#modal-root .btn.primary')?.click(); await wait(900); })()"],
 ];
 const SHOTS = process.env.SHOTS ? JSON.parse(process.env.SHOTS) : DEFAULT_SHOTS;
 

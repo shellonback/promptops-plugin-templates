@@ -59,6 +59,17 @@
     config: Object.freeze({ get: () => call('config.get') }),
     notify: Object.freeze({ toast: (message) => call('notify.toast', { message: String(message) }) }),
     prompt: Object.freeze({ propose: (text, title) => call('prompt.propose', { text: String(text), title: title ? String(title) : '' }) }),
+    // Sezione `pages`. `repo` è l'handle che arriva dal campo di tipo `repo`: lo sceglie l'utente.
+    git: Object.freeze({
+      status: (repo) => call('git.status', { repo }),
+      log: (repo, limit) => call('git.log', { repo, limit: limit || 20 }),
+      diff: (repo, opts) => call('git.diff', { repo, staged: !!(opts && opts.staged) }),
+    }),
+    // Solo `docs/*.md|markdown|txt`. L'utente vede il contenuto e conferma ogni file.
+    workspace: Object.freeze({ writeFile: (repo, path, content) => call('workspace.writeFile', { repo, path: String(path), content: String(content) }) }),
+    // Il modello gira senza strumenti e restituisce testo. L'utente vede il prompt e conferma ogni richiesta.
+    ai: Object.freeze({ generate: (opts) => call('ai.generate', typeof opts === 'string' ? { prompt: opts } : { prompt: String(opts && opts.prompt || ''), model: opts && opts.model || undefined }) }),
+    pages: Object.freeze({ update: (pageId, view) => call('pages.update', { pageId: String(pageId), view }) }),
     log: (...args) => call('log', { message: args.map(String).join(' ') }),
   });
 
@@ -73,6 +84,8 @@
       code: Object.freeze({ registerHost: contribute('code') }),
       data: Object.freeze({ registerExplorer: contribute('data') }),
       providers: Object.freeze({ registerUsage: contribute('providers') }),
+      // Una voce di menu propria: il plugin descrive la pagina come DATI, l'app la disegna.
+      pages: Object.freeze({ register: contribute('pages') }),
       // Eventi dell'app: solo metadati, mai testo di prompt, risposte o codice.
       events: Object.freeze({ on: (name, fn) => {
         if (typeof fn !== 'function') return;

@@ -58,6 +58,7 @@ Un plugin appartiene a una sola sezione. Parti dal modello di quella sezione.
 | `context` | [templates/context](templates/context) | Documenti da usare come contesto | Prompts › Project Brief |
 | `notify` | [templates/notify](templates/notify) | Messaggi inviati quando succede qualcosa | Notifications |
 | `agent` | [templates/agent](templates/agent) | Skill e azioni rapide, senza codice | Composer di spawn |
+| `pages` | [templates/pages](templates/pages) | Uno strumento con la sua pagina, descritta come dati | Una voce propria nel menu laterale |
 
 Nomi dei metodi, argomenti e forme di ritorno sono in [docs/CONTRACTS.md](docs/CONTRACTS.md).
 
@@ -148,6 +149,7 @@ Se tieni più plugin in un tuo repository, dai a ognuno la sua cartella e compil
 | Chiamata del contratto di sezione dall'app | Funziona. Si prova in **Plugins › Installed › Test contract** |
 | Schermate di sezione che disegnano i tuoi dati: board, usage, esploratori | In collegamento. Fino ad allora il riferimento grafico è il playground |
 | Skill e azioni rapide di `agent` | Per ora solo nel playground |
+| Pagine di `pages`: voce di menu, repository, salvataggio in `docs/`, Claude senza strumenti | Funzionano nell'app desktop su macOS. Linux da verificare, Windows non ancora per `ai:generate` |
 
 I contratti sono alla versione 0 e possono ancora cambiare prima dell'uscita delle schermate di sezione.
 

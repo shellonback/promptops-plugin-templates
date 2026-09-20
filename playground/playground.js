@@ -24,7 +24,7 @@ const api = (path, body) => fetch(path, body ? { method: 'POST', headers: { 'Con
 
 const SECTION = {
   tasks: 'Teams › Board', code: 'Sessions › Git Explorer', data: 'Sessions › side panel', providers: 'Usage',
-  agent: 'Spawn composer', context: 'Prompts › Project Brief', notify: 'Notifications',
+  agent: 'Spawn composer', context: 'Prompts › Project Brief', notify: 'Notifications', pages: 'the sidebar menu, as its own page',
 };
 const SAMPLE_EVENTS = {
   'session.started': { sessionId: 's_1', sessionName: 'checkout-refactor', provider: 'claude-code-cli' },
@@ -73,10 +73,14 @@ addEventListener('message', async (ev) => {
     return msg.ok ? p.resolve(msg.result) : p.reject(new Error(msg.error));
   }
   if (msg.__po !== 'call') return;
-  const res = await api('/api/broker', { plugin: state.plugin.name, method: String(msg.method), params: msg.params || {}, mode: state.mode, config: state.config, secrets: state.secrets });
+  // Writing a file and running the model ask the person first, with the full content in view.
+  const confirmed = ['workspace.writeFile', 'ai.generate'].includes(msg.method) ? await confirmCall(String(msg.method), msg.params || {}) : undefined;
+  const res = await api('/api/broker', { plugin: state.plugin.name, method: String(msg.method), params: msg.params || {}, mode: state.mode, config: state.config, secrets: state.secrets, confirmed });
   log({ method: msg.method, target: res.audit ?? '', ok: res.ok, error: res.error });
   if (res.ui?.toast) toast(res.ui.toast);
   if (res.ui?.proposal) proposal(res.ui.proposal);
+  if (res.ui?.file) writtenFile(res.ui.file);
+  if (res.ui?.pageUpdate) state.onPageUpdate?.(res.ui.pageUpdate);
   ev.source.postMessage({ __po: 'result', callId: msg.callId, ok: res.ok, result: res.result, error: res.error }, '*');
 });
 
@@ -85,7 +89,9 @@ function invoke(method, ...args) {
   const invokeId = 'i' + (++state.seq);
   const started = performance.now();
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => { state.pending.delete(invokeId); reject(new Error('the plugin did not answer within 30 s')); }, 30000);
+    // A page may wait for a confirmation and then for the model: PromptOps gives it 10 minutes.
+    const limit = kind === 'pages' ? 600 : 30;
+    const timer = setTimeout(() => { state.pending.delete(invokeId); reject(new Error(`the plugin did not answer within ${limit} s`)); }, limit * 1000);
     state.pending.set(invokeId, {
       resolve: (v) => { clearTimeout(timer); log({ method: 'invoke', target: `${kind}.${method} · ${Math.round(performance.now() - started)} ms`, ok: true }); resolve(v); },
       reject: (e) => { clearTimeout(timer); log({ method: 'invoke', target: `${kind}.${method}`, ok: false, error: e.message }); reject(e); },
@@ -120,6 +126,34 @@ function proposal({ title, text }) {
         h('pre', { class: 'text' }, text)),
       h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: close }, 'Dismiss'), h('button', { class: 'btn primary', onclick: () => navigator.clipboard?.writeText(text) }, 'Copy'))));
 }
+/** Same two questions PromptOps asks. Resolves true only on an explicit yes. */
+function confirmCall(method, params) {
+  const ai = method === 'ai.generate';
+  return new Promise((resolve) => {
+    const done = (yes) => { $('#modal-root').replaceChildren(); resolve(yes); };
+    $('#modal-root').replaceChildren(
+      h('div', { class: 'backdrop', onclick: () => done(false) }),
+      h('div', { class: 'modal', role: 'alertdialog', 'aria-modal': 'true' },
+        h('div', { class: 'head' }, ai ? 'Run this prompt on your Claude?' : 'Save this file?', h('div', { class: 'muted small' }, state.plugin.manifest.name + ' · plugin')),
+        h('div', { class: 'body' },
+          h('div', { class: 'note' }, ai
+            ? 'It runs with no tools: it cannot read or change files, run commands or go online. It can only answer with text. ' + (state.mode === 'fixtures' ? 'In Fixtures mode the answer comes from fixtures.json.' : 'In Live mode this calls the `claude` CLI on this machine.')
+            : 'Writes ' + String(params.path ?? '') + '. The playground never writes to disk: it shows you the file.'),
+          h('div', { class: 'muted small', style: 'margin:8px 0 4px' }, ai ? `Everything that is sent · ${String(params.prompt ?? '').length} characters` + (params.model ? ' · ' + params.model : '') : 'File content'),
+          h('pre', { class: 'text' }, String(ai ? params.prompt ?? '' : params.content ?? ''))),
+        h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: () => done(false) }, ai ? "Don't run" : "Don't save"), h('button', { class: 'btn primary', onclick: () => done(true) }, ai ? 'Run prompt' : 'Save file'))));
+  });
+}
+function writtenFile({ path, content }) {
+  const close = () => $('#modal-root').replaceChildren();
+  $('#modal-root').replaceChildren(
+    h('div', { class: 'backdrop', onclick: close }),
+    h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' },
+      h('div', { class: 'head' }, 'File the plugin would write', h('div', { class: 'muted small mono' }, path)),
+      h('div', { class: 'body' }, h('pre', { class: 'text' }, content)),
+      h('div', { class: 'foot' }, h('button', { class: 'btn primary', onclick: close }, 'Close'))));
+}
+
 const fill = (el, ...nodes) => el.replaceChildren(...nodes.flat().filter((n) => n !== null && n !== undefined && n !== false));
 const guard = (target, fn) => async (...a) => {
   try { await fn(...a); } catch (e) { target.replaceChildren(h('div', { class: 'note bad' }, e.message)); }
@@ -329,6 +363,86 @@ const previews = {
     }
   },
 
+  // A `pages` plugin returns a description of its page. This draws it with the same blocks and the same
+  // cleaning PromptOps applies, and lists what was dropped so you can fix it.
+  async pages(root) {
+    const { normalizeView, viewValues } = await import('./lib-view.js');
+    const declared = state.plugin.manifest.contributes?.pages ?? [];
+    const repo = { handle: 'repo_playground', ...(await api('/api/plugin?name=' + encodeURIComponent(state.plugin.name))).repo };
+    const menu = h('div', { class: 'row' }, h('span', { class: 'muted small' }, 'Menu entries'));
+    const page = h('div', { class: 'pg-page' });
+    const droppedBox = h('div', {});
+    root.append(menu, page, droppedBox);
+    let pageId = null; let values = {}; let busy = false;
+
+    const send = async (type, id) => {
+      if (busy) return;
+      busy = true; page.classList.add('busy');
+      try { draw(await invoke('event', pageId, { type, id, values })); } catch (e) { fill(droppedBox, h('div', { class: 'note bad' }, e.message)); } finally { busy = false; page.classList.remove('busy'); }
+    };
+    const set = (f, value) => { values[f.id] = value; if (f.live) send('change', f.id); };
+
+    const field = (f) => {
+      const label = h('div', { class: 'pg-label' }, f.label);
+      let control;
+      if (f.kind === 'toggle') {
+        const box = h('input', { type: 'checkbox', onchange: (e) => set(f, e.target.checked) }); box.checked = values[f.id] === true;
+        return h('label', { class: 'pg-field pg-toggle' + (f.half ? ' half' : '') }, box, h('span', {}, f.label));
+      } else if (f.kind === 'choice') {
+        control = h('div', { class: 'pg-choices' }, f.options.map((o) => h('button', { class: 'pg-choice' + (values[f.id] === o.value ? ' on' : ''), onclick: () => set(f, o.value) || draw.again() },
+          h('strong', {}, o.label), o.hint ? h('span', { class: 'muted small' }, o.hint) : null)));
+      } else if (f.kind === 'select' || f.kind === 'repo') {
+        const options = f.kind === 'repo' ? [{ value: '', label: 'No repository' }, { value: repo.handle, label: `${repo.name} · from fixtures.json` }] : f.options;
+        control = h('select', { onchange: (e) => set(f, f.kind === 'repo' ? (e.target.value ? { handle: repo.handle, name: repo.name, branch: repo.branch } : null) : e.target.value) },
+          options.map((o) => { const el = h('option', { value: o.value }, o.label); el.selected = (f.kind === 'repo' ? values[f.id]?.handle ?? '' : values[f.id]) === o.value; return el; }));
+      } else {
+        control = h(f.kind === 'textarea' ? 'textarea' : 'input', { rows: String(f.rows), placeholder: f.placeholder, oninput: (e) => { values[f.id] = e.target.value; } });
+        control.value = typeof values[f.id] === 'string' ? values[f.id] : '';
+        if (f.kind === 'textarea') control.classList.add('pg-plain');
+      }
+      return h('div', { class: 'pg-field' + (f.half ? ' half' : '') }, label, control, f.help ? h('div', { class: 'muted small' }, f.help) : null);
+    };
+    const block = (b) => {
+      switch (b.type) {
+        case 'columns': return h('div', { class: 'pg-columns' }, b.columns.map((col) => h('div', { class: 'pg-col pg-blocks' }, col.map(block))));
+        case 'heading': return h('div', { class: 'pg-h' }, b.text);
+        case 'text': return h('div', { class: 'pg-text' + (b.muted ? ' muted' : '') }, b.text);
+        case 'divider': return h('hr', { class: 'pg-hr' });
+        case 'notice': return h('div', { class: 'note ' + ({ success: 'ok', warning: 'warn', danger: 'bad' }[b.tone] ?? '') }, b.text);
+        case 'stats': return h('div', { class: 'pg-stats' }, b.items.map((s) => h('div', { class: 'pg-stat' }, h('span', { class: 'muted small' }, s.label), h('strong', {}, s.value))));
+        case 'progress': return h('div', {}, b.label ? h('div', { class: 'muted small' }, b.label) : null, h('div', { class: 'track' }, h('div', { class: 'fill', style: `width:${Math.round(b.value * 100)}%` })));
+        case 'list': return b.items.length ? h('div', { class: 'list' }, b.items.map((i) => h('div', { class: 'item' }, h('div', { class: 't' }, i.title), i.subtitle ? h('div', { class: 'muted small' }, i.subtitle) : null)))
+          : h('div', { class: 'pg-text muted' }, b.empty);
+        case 'table': return h('table', { class: 'table' }, h('thead', {}, h('tr', {}, b.columns.map((c) => h('th', {}, c)))), h('tbody', {}, b.rows.map((r) => h('tr', {}, r.map((c) => h('td', {}, c))))));
+        case 'actions': return h('div', { class: 'row' }, b.items.map((a) => { const el = h('button', { class: 'btn' + (a.style === 'primary' ? ' primary' : ''), onclick: () => send('action', a.id) }, a.label); el.disabled = a.disabled; return el; }));
+        case 'output': {
+          if (!b.editable) return h('div', { class: 'pg-field' }, h('div', { class: 'pg-label' }, b.label), h('pre', { class: 'text' }, b.text));
+          const area = h('textarea', { rows: '14', class: b.mono ? '' : 'pg-plain', oninput: (e) => { values[b.id] = e.target.value; } }); area.value = typeof values[b.id] === 'string' ? values[b.id] : b.text;
+          return h('div', { class: 'pg-field' }, h('div', { class: 'pg-label' }, b.label), area);
+        }
+        default: return field(b);
+      }
+    };
+    let last = null;
+    const draw = (raw) => {
+      last = normalizeView(raw);
+      values = viewValues(last);
+      draw.again();
+      fill(droppedBox, last.dropped.length ? h('div', { class: 'note warn' }, h('strong', {}, 'PromptOps would drop ' + last.dropped.length + ' block(s): '), last.dropped.join(' · ')) : null);
+    };
+    draw.again = () => fill(page, h('div', { class: 'pg-title' }, last.title || declared.find((p) => p.id === pageId)?.title || ''), last.subtitle ? h('div', { class: 'muted' }, last.subtitle) : null,
+      h('div', { class: 'pg-blocks' }, last.blocks.map(block)));
+    state.onPageUpdate = (u) => { if (u.pageId === pageId) draw(u.view); };
+
+    const open = async (id) => {
+      pageId = id;
+      [...menu.querySelectorAll('button')].forEach((b) => b.classList.toggle('primary', b.dataset.id === id));
+      await guard(page, async () => draw(await invoke('open', id, {})))();
+    };
+    menu.append(...declared.map((p) => h('button', { class: 'btn', 'data-id': p.id, title: 'icon: ' + (p.icon ?? 'ti-puzzle'), onclick: () => open(p.id) }, p.title)));
+    if (declared.length) await open(declared[0].id);
+  },
+
   async agent(root) {
     const c = state.plugin.manifest.contributes ?? {};
     const preview = h('div', {});
@@ -356,7 +470,7 @@ async function renderCenter() {
   if (state.plugin.validation.errors.length) return body.append(h('div', { class: 'empty' }, 'Fix the manifest errors on the left, then press Reload plugin.'));
   if (!state.ready) return body.append(h('div', { class: 'note bad' }, 'The plugin did not start. Check the Activity log and your browser console.'));
 
-  const wants = { tasks: 'listContainers', context: 'search', code: 'listPullRequests', data: 'listResources', providers: 'getUsage' }[m.category];
+  const wants = { tasks: 'listContainers', context: 'search', code: 'listPullRequests', data: 'listResources', providers: 'getUsage', pages: 'open' }[m.category];
   if (wants && !has(wants)) {
     body.append(h('div', { class: 'note bad' }, `A "${m.category}" plugin must register its contract. Nothing was registered for ${m.category}.${wants}. See docs/CONTRACTS.md.`));
   } else {

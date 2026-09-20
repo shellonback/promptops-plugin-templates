@@ -7,12 +7,14 @@
 // It serves the graphical test page and plays the role of the PromptOps broker,
 // applying the same rules as the real desktop runtime. It binds to 127.0.0.1 only.
 import { createServer } from 'node:http';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { lookup } from 'node:dns/promises';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  FORBIDDEN_REQUEST_HEADERS, RESPONSE_HEADERS, isForbiddenIp, resolveUrl, scanSource, scrubSecrets, sha256, substituteSecrets, validateManifest,
+  FORBIDDEN_REQUEST_HEADERS, RESPONSE_HEADERS, isForbiddenIp, resolveUrl, scanSource, scrubSecrets, sha256, substituteSecrets, validDocsPath, validateManifest,
 } from './lib/policy.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -111,6 +113,37 @@ async function httpFetch(plugin, params, mode, secrets) {
   return { audit, result: { status: res.status, ok: res.ok, headers: outHeaders, body: scrubSecrets(buf.toString('utf8'), secrets) } };
 }
 
+/** The repository of the playground comes from fixtures.json: there is no real folder behind it. */
+export const PLAYGROUND_REPO = 'repo_playground';
+const repoFixture = (plugin, params) => {
+  if (params.repo !== PLAYGROUND_REPO) throw new Error('repository not granted to this plugin: the person picks it on the page');
+  return plugin.fixtures.git ?? { name: 'demo-repo', branch: 'main', status: { branch: 'main', files: [] }, log: [], diff: '' };
+};
+
+/**
+ * Same isolation as PromptOps: no tools, no MCP servers, no skills, an empty working folder.
+ * No shell is involved, so the empty `--tools` value reaches the CLI as it is.
+ */
+async function runClaude(prompt, model) {
+  const cwd = await mkdtemp(join(tmpdir(), 'po-playground-ai-'));
+  const args = ['-p', '--output-format', 'text', '--tools', '', '--strict-mcp-config', '--disable-slash-commands', '--no-session-persistence'];
+  if (model) args.push('--model', model);
+  try {
+    return await new Promise((resolve, reject) => {
+      const child = spawn('claude', args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+      let out = ''; let err = '';
+      const timer = setTimeout(() => { child.kill(); reject(new Error('the model did not answer in time')); }, 300_000);
+      child.stdout.on('data', (d) => { out += d; });
+      child.stderr.on('data', (d) => { err += d; });
+      child.on('error', () => { clearTimeout(timer); reject(new Error('`claude` was not found on this machine. Use Fixtures mode, or install Claude Code.')); });
+      child.on('close', (code) => { clearTimeout(timer); code === 0 && out.trim() ? resolve(out.trim()) : reject(new Error(err.trim().slice(0, 300) || 'the model returned nothing')); });
+      child.stdin.end(prompt);
+    });
+  } finally {
+    await rm(cwd, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
 async function broker(body) {
   const plugin = await loadPlugin(body.plugin);
   if (body.mode === 'fixtures') {
@@ -137,6 +170,41 @@ async function broker(body) {
     case 'prompt.propose':
       need('prompt:propose');
       return { audit: 'proposal', result: true, ui: { proposal: { title: String(params.title ?? '').slice(0, 120), text: String(params.text ?? '').slice(0, 8000) } } };
+    // ── Section `pages` ──
+    case 'git.status': { need('git:read'); const r = repoFixture(plugin, params); return { audit: r.name, result: { files: [], total: (r.status?.files ?? []).length, truncated: false, ...r.status } }; }
+    case 'git.log': { need('git:read'); const r = repoFixture(plugin, params); return { audit: r.name, result: (r.log ?? []).slice(0, Math.min(Math.max(Number(params.limit) || 20, 1), 100)) }; }
+    case 'git.diff': { need('git:read'); const r = repoFixture(plugin, params); return { audit: r.name, result: { diff: String(r.diff ?? '').slice(0, 200_000), truncated: false } }; }
+    case 'workspace.writeFile': {
+      need('workspace:write');
+      const r = repoFixture(plugin, params);
+      if (!validDocsPath(params.path)) throw new Error('only `docs/` can be written, in .md, .markdown or .txt files');
+      if (String(params.content ?? '').length > 500_000) throw new Error('content over the size limit');
+      // The page asks the person first and sends `confirmed`. Without it the call is refused, as in PromptOps.
+      if (body.confirmed !== true) throw new Error('user_denied: the person did not confirm');
+      // The playground never touches a disk: it shows the file instead.
+      return { audit: `${r.name}/${params.path}`, result: { path: params.path, repo: r.name, overwritten: false }, ui: { file: { path: `${r.name}/${params.path}`, content: String(params.content) } } };
+    }
+    case 'ai.generate': {
+      need('ai:generate');
+      const prompt = String(params.prompt ?? '').trim();
+      if (!prompt) throw new Error('parameter `prompt` is missing');
+      if (prompt.length > 200_000) throw new Error('prompt over the size limit');
+      if (params.model !== undefined && !/^[A-Za-z0-9][A-Za-z0-9._-]{0,59}$/.test(String(params.model))) throw new Error('model name is not valid');
+      if (body.confirmed !== true) throw new Error('user_denied: the person did not confirm');
+      const audit = `claude${params.model ? ' ' + params.model : ''} · ${prompt.length} chars`;
+      if (body.mode === 'fixtures') {
+        const hit = (plugin.fixtures.ai ?? []).find((f) => !f.match || prompt.includes(f.match));
+        if (!hit) throw Object.assign(new Error('no `ai` fixture matches this prompt. Add one to fixtures.json or switch to Live.'), { audit });
+        return { audit, result: { text: String(hit.text), truncated: false } };
+      }
+      return { audit, result: { text: (await runClaude(prompt, params.model)).slice(0, 200_000), truncated: false } };
+    }
+    case 'pages.update': {
+      const pageId = String(params.pageId ?? '');
+      if (!(plugin.manifest.contributes?.pages ?? []).some((p) => p.id === pageId)) throw new Error('page not declared in the manifest');
+      if (JSON.stringify(params.view ?? null).length > 256_000) throw new Error('view over the size limit');
+      return { audit: pageId, result: true, ui: { pageUpdate: { pageId, view: params.view } } };
+    }
     case 'log': return { audit: String(params.message ?? '').slice(0, 500), result: true };
     default: throw new Error(`method \`${body.method}\` is not offered by the runtime`);
   }
@@ -170,7 +238,10 @@ createServer(async (req, res) => {
     }
     if (url.pathname === '/api/plugin') {
       const p = await loadPlugin(url.searchParams.get('name'));
-      return json(res, 200, { name: p.name, manifest: p.manifest, bundle: p.bundle, bundleSha256: p.bundleSha256, validation: p.validation, findings: p.findings, extras: p.extras, fixtureCount: (p.fixtures.http ?? []).length });
+      const git = p.fixtures.git ?? {};
+      return json(res, 200, { name: p.name, manifest: p.manifest, bundle: p.bundle, bundleSha256: p.bundleSha256, validation: p.validation, findings: p.findings, extras: p.extras,
+        fixtureCount: (p.fixtures.http ?? []).length + (p.fixtures.ai ?? []).length + (p.fixtures.git ? 1 : 0),
+        repo: { name: String(git.name ?? 'demo-repo'), branch: String(git.branch ?? git.status?.branch ?? 'main') } });
     }
     if (url.pathname === '/api/broker' && req.method === 'POST') {
       const chunks = [];
