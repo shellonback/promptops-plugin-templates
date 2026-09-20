@@ -8,6 +8,7 @@
   "minAppVersion": "2.1.0",
   "entry": "dist/plugin.js",
   "permissions": ["git:read", "ai:generate", "workspace:write"],
+  "providers": ["claude-code-cli"],
   "contributes": {
     "pages": [{ "id": "release-notes", "title": "Release Notes", "icon": "ti-notes" }]
   }

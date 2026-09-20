@@ -12,4 +12,9 @@ const TEXT = {
   'workspace:write': 'Write text files in the docs/ folder of that repository. You confirm every file',
   'ai:generate': 'Run a prompt on your own Claude, with no tools and no file access. You see and confirm every prompt',
 };
+// Provider ids a manifest can list under `providers`. Same list as lib/policy.mjs.
+export const PROVIDER_NAMES = {
+  'claude-code-cli': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini', antigravity: 'Antigravity', copilot: 'GitHub Copilot',
+  cursor: 'Cursor', grok: 'Grok', hermes: 'Hermes', zai: 'Z.AI', kimi: 'Kimi', opencode: 'Opencode',
+};
 export const describePermission = (p) => (p.startsWith('net:') ? `Connect to ${p.slice(4)} over HTTPS` : TEXT[p] ?? p);

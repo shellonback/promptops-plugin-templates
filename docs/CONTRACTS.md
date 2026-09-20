@@ -216,11 +216,15 @@ promptops.actions.register('send-test', async (context, sdk) => { /* ... */ });
 | `id` | `your-handle.plugin-slug`. Lowercase letters, digits, hyphens, one dot. Permanent |
 | `name` | 2 to 80 characters |
 | `version` | Semantic: `0.1.0`. Every submission needs a higher one |
-| `category` | One of `tasks`, `code`, `data`, `providers`, `context`, `notify`, `agent` |
+| `category` | One of `tasks`, `code`, `data`, `providers`, `context`, `notify`, `agent`, `pages` |
 | `entry` | Relative path to **one** `.js` file, already built. 2 MB at most. No build step runs on install |
-| `permissions` | Array. `net:<host>` per host, plus any of `secrets`, `storage`, `notify`, `sessions:read`, `tasks:read`, `tasks:write`, `prompt:propose`, `agents:propose` |
+| `permissions` | Array. `net:<host>` per host, plus any of `secrets`, `storage`, `notify`, `sessions:read`, `tasks:read`, `tasks:write`, `prompt:propose`, `agents:propose`. For `pages` also `git:read`, `workspace:write`, `ai:generate` |
 | `config.fields` | `[{ key, type, label, required?, default?, options? }]` with `type`: `text`, `secret`, `number`, `boolean`, `select`, `multiselect`, `url`. PromptOps builds the form |
 | `description` | Shown in the catalog |
 | `repository` | Optional. Your public GitHub repository, as `https://github.com/owner/name`. PromptOps shows the owner and its avatar next to the plugin |
+| `providers` | Optional. The AI providers you have tried your plugin with, best first: `claude-code-cli`, `codex`, `gemini-cli`, `antigravity`, `copilot`, `cursor`, `grok`, `hermes`, `zai`, `kimi`, `opencode`. The catalog shows the first three as small icons, then `+N` |
+| `contributes.pages` | `pages` only. One to three menu entries: `{ id, title, icon }` |
+
+`providers` is your statement: "it works with these". List only what you tested. Leave it out if your plugin does not depend on the provider, like a task source or a notifier. A plugin that uses `ai:generate` runs on Claude, so list `claude-code-cli`.
 
 Hosts must be public domain names. No IP addresses, wildcards, `localhost` or internal domains.

@@ -75,15 +75,15 @@
       "description": "Turns your notes and the git activity of a repository into an email, documentation, a changelog, a status report or a handover, and saves it in docs/.",
       "repo_url": "https://github.com/shellonback/promptops-plugin-git-writer",
       "status": "published",
-      "version": "0.1.0",
-      "commit_sha": "2563237551056cc617fe10442a1bdc0e5ab5ca96",
+      "version": "0.1.1",
+      "commit_sha": "8c34910b021d0ad12703b12998902e21e8c94a62",
       "bundle_sha256": "f1f544909bf14b26864850d678f71d2b5e62dffb7ee13fd8a806d77dff2de02e",
       "source_dir": null,
       "manifest": {
         "schemaVersion": 1,
         "id": "promptops.git-writer",
         "name": "AI Git Writer",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "category": "pages",
         "description": "Turns your notes and the git activity of a repository into an email, documentation, a changelog, a status report or a handover, and saves it in docs/.",
         "repository": "https://github.com/shellonback/promptops-plugin-git-writer",
@@ -94,6 +94,9 @@
           "workspace:write",
           "ai:generate",
           "storage"
+        ],
+        "providers": [
+          "claude-code-cli"
         ],
         "contributes": {
           "pages": [
@@ -111,7 +114,7 @@
         "kind": "team",
         "verified": true
       },
-      "updated_at": "2026-09-20T22:04:11.000Z"
+      "updated_at": "2026-09-20T22:27:18.000Z"
     }
   ]
 }

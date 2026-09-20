@@ -182,6 +182,14 @@ function renderLeft(templatesPermText) {
       ? h('ul', { class: 'clean' }, m.permissions.map((p) => h('li', { class: 'perm' }, templatesPermText(p), h('code', {}, p))))
       : h('div', { class: 'muted' }, 'Nothing outside the sandbox.')));
 
+  // Optional statement by the author. The catalog shows the first three as small icons.
+  const works = (Array.isArray(m.providers) ? m.providers : []).filter((id) => policy?.PROVIDER_NAMES?.[id]);
+  if (works.length) {
+    left.append(card(h('span', {}, 'Works with ', h('span', { class: 'muted small' }, 'declared by you, shown in the catalog')),
+      h('div', { class: 'row' }, works.map((id, i) => h('span', { class: 'chip' + (i < 3 ? ' accent' : '') }, policy.PROVIDER_NAMES[id]))),
+      works.length > 3 ? h('div', { class: 'muted small', style: 'margin-top:6px' }, 'The catalog card shows the first three, then +' + (works.length - 3) + '.') : null));
+  }
+
   const fields = m.config?.fields ?? [];
   if (fields.length) {
     const form = h('div', { class: 'form' });

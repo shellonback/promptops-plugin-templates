@@ -10,6 +10,16 @@ export const ALLOWED_PERMISSIONS = [
   // Section `pages` only. Each one goes through a choice or a confirmation by the person.
   'git:read', 'workspace:write', 'ai:generate',
 ];
+/**
+ * AI providers a plugin can say it works with (`providers` in the manifest). Optional.
+ * It is a statement by the author, shown in the catalog: the first three as small icons.
+ */
+export const PROVIDERS = {
+  'claude-code-cli': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini', antigravity: 'Antigravity', copilot: 'GitHub Copilot',
+  cursor: 'Cursor', grok: 'Grok', hermes: 'Hermes', zai: 'Z.AI', kimi: 'Kimi', opencode: 'Opencode',
+};
+export const MAX_PROVIDERS = 11;
+
 export const PAGES_ONLY_PERMISSIONS = ['git:read', 'workspace:write', 'ai:generate'];
 export const MAX_MENU_PAGES = 3;
 
@@ -88,6 +98,18 @@ export function validateManifest(m) {
       if (isPublicHostname(host)) hosts.push(host.toLowerCase());
       else errors.push(`\`${p}\`: the host must be a public domain name. No IP addresses, wildcards, localhost or internal domains.`);
     } else if (!ALLOWED_PERMISSIONS.includes(p)) errors.push(`\`${p}\` is not a permission the runtime offers.`);
+  }
+  if (m.providers !== undefined) {
+    if (!Array.isArray(m.providers) || m.providers.length > MAX_PROVIDERS) errors.push('`providers` must be an array of provider ids, ' + MAX_PROVIDERS + ' at most.');
+    else {
+      const unknown = m.providers.filter((p) => typeof p !== 'string' || !(p in PROVIDERS));
+      if (unknown.length) errors.push('`providers`: unknown id ' + unknown.map((p) => JSON.stringify(p)).join(', ') + '. Known ids: ' + Object.keys(PROVIDERS).join(', ') + '.');
+      if (new Set(m.providers).size !== m.providers.length) errors.push('`providers` lists the same id twice.');
+      // The model of `ai:generate` is Claude, run with no tools. Saying otherwise would mislead people.
+      if ((m.permissions ?? []).includes('ai:generate') && m.providers.length && !m.providers.includes('claude-code-cli')) {
+        warnings.push('This plugin uses `ai:generate`, which runs on Claude, but `providers` does not list `claude-code-cli`.');
+      }
+    }
   }
   // Menu entries and the permissions that come with them belong to the `pages` section only.
   const pages = m.contributes?.pages;
