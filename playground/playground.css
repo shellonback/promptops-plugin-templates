@@ -95,6 +95,8 @@ pre.text { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--fo
 .board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 4px; }
 .lane { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
 .lane-h { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); display: flex; justify-content: space-between; padding: 2px 4px; }
+.swatch { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.lane-h .row { gap: 6px; flex-wrap: nowrap; }
 .task, .item { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; cursor: pointer; }
 .task:hover, .item:hover { border-color: var(--accent); background: var(--bg-3); }
 .task .t, .item .t { font-weight: 500; overflow-wrap: anywhere; } .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }

@@ -177,40 +177,71 @@ function renderLeft(templatesPermText) {
 const previews = {
   async tasks(root) {
     const head = h('div', { class: 'row' });
+    const picker = h('div', { class: 'row' });
     const board = h('div', {});
     const detail = h('div', {});
-    root.append(head, board, detail);
+    root.append(head, picker, board, detail);
     if (has('validate')) {
       const who = await invoke('validate');
       head.append(h('span', { class: 'chip ' + (who?.ok ? 'ok' : 'bad') }, who?.ok ? 'connected' + (who.account ? ' as ' + who.account : '') : 'not connected: ' + (who?.error ?? '')));
     }
-    const containers = await invoke('listContainers', null);
-    const select = h('select', { onchange: guard(board, () => show(select.value)) }, containers.map((c) => h('option', { value: c.id }, c.name)));
-    head.prepend(h('label', { class: 'field-inline' }, 'Source ', select));
+
+    // Values from a plugin are untrusted: a color is applied only if it is a plain hex.
+    const safeColor = (c) => (/^#[0-9a-f]{3,8}$/i.test(String(c || '')) ? c : null);
+    const PRIORITY_CHIP = { critical: 'bad', high: 'warn' };
+    let current = null;
+
+    // Sources can be a tree (workspace › project › folder › list). One select per level;
+    // the board appears when the person reaches a container that holds tasks.
+    async function level(parentId, depth) {
+      while (picker.children.length > depth) picker.lastChild.remove();
+      const items = await invoke('listContainers', parentId);
+      if (!items.length) {
+        if (depth === 0) fill(board, h('div', { class: 'empty' }, 'The source returned no containers.'));
+        return;
+      }
+      const select = h('select', { 'aria-label': 'Source level ' + (depth + 1) }, items.map((c) => h('option', { value: c.id }, c.name + (c.kind && c.kind !== 'list' ? '  ›' : ''))));
+      const choose = guard(board, async () => {
+        const c = items.find((x) => x.id === select.value);
+        while (picker.children.length > depth + 1) picker.lastChild.remove();
+        if (c.hasChildren) { fill(board); fill(detail); await level(c.id, depth + 1); } else { current = c.id; await show(c.id); }
+      });
+      select.addEventListener('change', choose);
+      picker.append(select);
+      await choose();
+    }
 
     async function show(containerId) {
-      detail.replaceChildren();
-      board.replaceChildren(h('div', { class: 'muted' }, 'Loading…'));
+      fill(detail);
+      fill(board, h('div', { class: 'muted' }, 'Loading…'));
       const [statuses, page] = await Promise.all([invoke('listStatuses', containerId), invoke('listTasks', { containerId, statuses: null, updatedSince: null, cursor: null })]);
       fill(board, h('div', { class: 'board' }, statuses.map((s) => {
-        const tasks = page.tasks.filter((t) => t.status === s.id);
-        return h('div', { class: 'lane' }, h('div', { class: 'lane-h' }, s.name, h('span', {}, String(tasks.length))),
+        const tasks = page.tasks.filter((t) => t.status === s.id).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const color = safeColor(s.color);
+        return h('div', { class: 'lane' },
+          h('div', { class: 'lane-h' }, h('span', { class: 'row' }, color ? h('span', { class: 'swatch', style: `background:${color}` }) : null, s.name), h('span', {}, String(tasks.length))),
           tasks.map((t) => h('button', { class: 'task', onclick: guard(detail, () => open(t.id, statuses)) }, h('div', { class: 't' }, t.title),
-            h('div', { class: 'tags' }, (t.labels ?? []).slice(0, 4).map((l) => h('span', { class: 'tag' }, l))))));
+            h('div', { class: 'tags' },
+              t.priority && PRIORITY_CHIP[t.priority] ? h('span', { class: 'chip ' + PRIORITY_CHIP[t.priority] }, t.priority) : null,
+              (t.labels ?? []).slice(0, 4).map((l) => h('span', { class: 'tag' }, l))))));
       })), page.nextCursor ? h('div', { class: 'muted small' }, 'More tasks available: nextCursor = ' + page.nextCursor) : null);
     }
+
     async function open(id, statuses) {
       const t = await invoke('getTask', id);
       const comments = has('listComments') ? await invoke('listComments', id) : [];
-      detail.replaceChildren(card(h('span', {}, t.title),
+      fill(detail, card(h('span', {}, t.title),
         kv('status', has('setStatus')
-          ? h('select', { onchange: guard(detail, async (e) => { await invoke('setStatus', id, e.target.value); await show(select.value); }) }, statuses.map((s) => h('option', { value: s.id, selected: s.id === t.status }, s.name)))
-          : t.status, 'assignees', (t.assignees ?? []).join(', ') || 'nobody', 'updated', t.updatedAt ?? '', 'link', h('a', { href: t.url, target: '_blank', rel: 'noopener noreferrer' }, t.url)),
+          ? h('select', { onchange: guard(detail, async (e) => { await invoke('setStatus', id, e.target.value); await show(current); }) }, statuses.map((s) => h('option', { value: s.id, selected: s.id === t.status }, s.name)))
+          : t.status,
+          ...(t.priority ? ['priority', t.priority] : []),
+          'assignees', (t.assignees ?? []).join(', ') || 'nobody', 'updated', t.updatedAt ?? '', 'link', h('a', { href: t.url, target: '_blank', rel: 'noopener noreferrer' }, t.url)),
         h('pre', { class: 'text' }, t.description || 'No description.'),
         comments.length ? h('div', { class: 'list' }, comments.map((c) => h('div', { class: 'note' }, h('div', { class: 'muted small' }, `${c.author} · ${c.createdAt}`), c.body))) : null,
         state.ready.actions.includes('task-to-agent') ? h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => runAction('task-to-agent', { task: t }) }, 'Propose to agent')) : null));
     }
-    if (containers.length) await show(containers[0].id); else board.replaceChildren(h('div', { class: 'empty' }, 'The source returned no containers.'));
+
+    await level(null, 0);
   },
 
   async context(root) {

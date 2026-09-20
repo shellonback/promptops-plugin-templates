@@ -31,18 +31,23 @@ promptops.tasks.registerSource({ validate, listContainers, listStatuses, listTas
 | Method | PromptOps calls it when | Return |
 |---|---|---|
 | `validate()` | The person saves the settings | `{ ok, account?, error? }` |
-| `listContainers(parentId)` | The person picks where tasks come from. `parentId` is `null` at the top | `[{ id, name, kind, hasChildren }]` with `kind`: `workspace`, `project` or `list` |
-| `listStatuses(containerId)` | It builds the board columns | `[{ id, name, type }]` with `type`: `todo`, `in_progress` or `done` |
+| `listContainers(parentId)` | The person picks where tasks come from. `parentId` is `null` at the top, then the `id` of the container they opened | `[{ id, name, kind, hasChildren }]` with `kind`: `workspace`, `project`, `folder` or `list` |
+| `listStatuses(containerId)` | It builds the board columns | `[{ id, name, type, color? }]` with `type`: `todo`, `in_progress` or `done`. `color` is a hex like `#5b5bd6` |
 | `listTasks({ containerId, statuses, updatedSince, cursor })` | It syncs. `cursor` is the `nextCursor` you returned before | `{ tasks: [Task], nextCursor }` with `nextCursor: null` on the last page |
 | `getTask(id)` | The person opens a task | `Task` |
 | `setStatus(id, statusId)` *optional* | The person moves a card. Needs `tasks:write` | `Task` |
 | `listComments(id)` *optional* | The person opens a task | `[{ id, author, body, createdAt }]` |
 
 ```
-Task = { id, title, description, status, url, assignees: [string], labels: [string], updatedAt }
+Task = { id, title, description, status, url, assignees: [string], labels: [string], updatedAt,
+         priority?, order?, assigneeEmails?: [string] }
 ```
 
-`status` is the `id` of one of your statuses. Keep `id` stable: it links the task across syncs.
+- `status` is the `id` of one of your statuses. Keep `id` stable: it links the task across syncs.
+- A source can be flat or a tree. Return `hasChildren: true` for a container the person can open. Tasks are asked only for a container with `hasChildren: false`.
+- `priority` is `low`, `medium`, `high` or `critical`. `order` sorts cards inside a column, lowest first.
+- `assigneeEmails` lets PromptOps match assignees to team members. Lowercase them and sort them: a stable order keeps the sync quiet.
+- Comments may add `authorEmail`.
 
 ## code
 

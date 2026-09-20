@@ -16,7 +16,8 @@ const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/M
 const SCHEME = process.env.SCHEME === 'light' ? 'light' : 'dark';
 
 // name, plugin, optional JS to run after the preview is ready
-const SHOTS = [
+// Override with SHOTS='[["name","plugin","js or null"]]' to capture your own plugin (run the server with --plugin).
+const DEFAULT_SHOTS = [
   ['tasks', 'tasks', "document.querySelector('.task')?.click()"],
   ['code', 'code', "document.querySelector('#center .item')?.click()"],
   ['context', 'context', "document.querySelector('#center .item')?.click()"],
@@ -25,6 +26,7 @@ const SHOTS = [
   ['notify', 'notify', "document.querySelector('#center .btn.primary')?.click()"],
   ['agent', 'agent', null],
 ];
+const SHOTS = process.env.SHOTS ? JSON.parse(process.env.SHOTS) : DEFAULT_SHOTS;
 
 const profile = await mkdtemp(join(tmpdir(), 'po-shots-'));
 const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--remote-debugging-port=9333', `--user-data-dir=${profile}`, '--window-size=1440,1000', 'about:blank'], { stdio: 'ignore' });
