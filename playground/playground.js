@@ -34,7 +34,7 @@ const SAMPLE_EVENTS = {
   'task.status_changed': { taskId: '42', title: 'Fix login redirect', from: 'open', to: 'closed' },
 };
 
-const state = { plugin: null, mode: 'fixtures', config: {}, secrets: {}, frame: null, ready: null, pending: new Map(), seq: 0 };
+const state = { plugin: null, mode: 'fixtures', config: {}, secrets: {}, frame: null, ready: null, pending: new Map(), seq: 0, egress: new Map() };
 
 // ── sandbox (mirrors the real host page) ─────────────────────────────────────
 const LT = String.fromCharCode(60);
@@ -43,6 +43,8 @@ const inlineSafe = (js) => js.replace(new RegExp(LT + '/(script)', 'gi'), LT + '
 async function mount() {
   if (state.frame) state.frame.remove();
   state.ready = null;
+  // A reloaded plugin is asked again, as when PromptOps restarts or the plugin is turned off and on.
+  state.egress.clear();
   setSandbox('starting');
   const sdk = await fetch('sdk.js').then((r) => r.text());
   const f = document.createElement('iframe');
@@ -73,6 +75,18 @@ addEventListener('message', async (ev) => {
     return msg.ok ? p.resolve(msg.result) : p.reject(new Error(msg.error));
   }
   if (msg.__po !== 'call') return;
+  // A plugin that can read a repository asks before it first talks to each host. A "no" stays a "no".
+  if (msg.method === 'http.fetch' && (state.plugin.manifest.permissions ?? []).includes('git:read')) {
+    const host = /^https:\/\/([^/?#]+)/i.exec(String(msg.params?.url ?? ''))?.[1]?.toLowerCase();
+    if (host) {
+      if (!state.egress.has(host)) state.egress.set(host, await confirmEgress(host, msg.params || {}));
+      if (!state.egress.get(host)) {
+        const error = `user_denied: sending to ${host} was refused. Reload the plugin to decide again`;
+        log({ method: msg.method, target: host, ok: false, error });
+        return ev.source.postMessage({ __po: 'result', callId: msg.callId, ok: false, error }, '*');
+      }
+    }
+  }
   // Writing a file and running the model ask the person first, with the full content in view.
   const confirmed = ['workspace.writeFile', 'ai.generate', 'ai.benchmark'].includes(msg.method) ? await confirmCall(String(msg.method), msg.params || {}) : undefined;
   const res = await api('/api/broker', { plugin: state.plugin.name, method: String(msg.method), params: msg.params || {}, mode: state.mode, config: state.config, secrets: state.secrets, confirmed });
@@ -137,6 +151,23 @@ function proposal({ title, text }) {
         h('pre', { class: 'text' }, text)),
       h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: close }, 'Dismiss'), h('button', { class: 'btn primary', onclick: () => navigator.clipboard?.writeText(text) }, 'Copy'))));
 }
+/** PromptOps asks this once per host each time the app starts, for plugins with `git:read`. */
+function confirmEgress(host, params) {
+  const body = String(params.body ?? '');
+  return new Promise((resolve) => {
+    const done = (yes) => { $('#modal-root').replaceChildren(); resolve(yes); };
+    $('#modal-root').replaceChildren(
+      h('div', { class: 'backdrop', onclick: () => done(false) }),
+      h('div', { class: 'modal', role: 'alertdialog', 'aria-modal': 'true' },
+        h('div', { class: 'head' }, `Let ${state.plugin.manifest.name} send data to ${host}?`, h('div', { class: 'muted small' }, state.plugin.manifest.name + ' · plugin')),
+        h('div', { class: 'body' },
+          h('div', { class: 'note' }, `This plugin can read the repositories the person picks, so what it sends to ${host} can include that code. PromptOps asks once per host each time the app starts. After a no, the host stays blocked until the plugin is turned off and on.`),
+          h('div', { class: 'muted small', style: 'margin:8px 0 4px' }, `${String(params.method ?? 'GET').toUpperCase()} https://${host} · ${body.length} bytes in this first request`),
+          body ? h('pre', { class: 'text' }, body.slice(0, 4000)) : ''),
+        h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: () => done(false) }, "Don't allow"), h('button', { class: 'btn primary', onclick: () => done(true) }, 'Allow until I quit'))));
+  });
+}
+
 /** Same two questions PromptOps asks. Resolves true only on an explicit yes. */
 function confirmCall(method, params) {
   const ai = method === 'ai.generate';

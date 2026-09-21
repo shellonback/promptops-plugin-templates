@@ -86,4 +86,5 @@ Switch to **Live** and press the button again. The playground runs the `claude` 
 
 - Your state lives inside the sandbox for as long as PromptOps is open. Use `sdk.storage` with the `storage` permission for what must survive a restart.
 - You have ten minutes to answer an event. For long work, call `sdk.pages.update(pageId, view)` with a `progress` block while you go.
-- `git:read` together with a `net:` permission lets repository content leave the device. It is allowed, the reviewer will look at what you send.
+- `git:read` together with a `net:` permission lets repository content leave the device. It is allowed, and the reviewer will look at what you send. The person is asked too: the first time you call each host after PromptOps starts, they see the host and the body of that request. A no rejects `sdk.http.fetch` with `user_denied`, and the host stays blocked until the plugin is turned off and on. The playground asks the same question.
+- Never ask for a password or a token in a field of your page. PromptOps shows a warning under such a field. Declare credentials as `secret` fields in `config`: the person types them in Configure, the broker uses them, your code never sees them.

@@ -30,13 +30,15 @@ A `pages` plugin can ask for four permissions that no other section can have. Ea
 
 - **`ai:benchmark`**. Speed measurements. The prompt belongs to PromptOps and is fixed, the CLIs run in an empty folder, and the plugin receives numbers only: never the text a model wrote. With no way in and no way out, it is safe with every provider. Before a run the person sees the models and the number of calls on their accounts. Six runs per hour.
 
-`git:read` together with a `net:` permission means repository content could leave the device. It is allowed, but the scanner flags it and the reviewer checks what is sent.
+`git:read` together with a `net:` permission means repository content could leave the device. It is allowed, but the scanner flags it and the reviewer checks what is sent. The person is asked too: the first time such a plugin talks to each host, every time the app starts, PromptOps shows the host and what the request sends, and waits for a yes. A no rejects the call with `user_denied`, and that host stays blocked until the plugin is turned off and on. It applies to every request, not only after a read, so data put aside in `storage` cannot leave quietly at the next start.
 
 The page itself is data. PromptOps draws it with its own components and shows every value as text, so a plugin cannot put HTML, CSS or script in the app.
 
+Above every plugin page PromptOps draws a band of its own: the owner and name from the approved manifest, the version, and a line saying the page is not made by PromptOps. A plugin cannot change or hide it. A text field whose label, placeholder or help asks for a password, token or key gets a warning from the app under it. Never ask for credentials on a page: declare them as `secret` fields in `config`, so the person enters them in **Configure** and your code never sees them.
+
 ## Secrets
 
-Credentials are stored on the person's device. Your code writes `{{secret:key}}` and the broker substitutes the value when the request leaves, only towards a declared host. Secrets are allowed in headers and in the URL path or query, never in the host, never in the body. For HTTP Basic authentication write `{{basic:user:secret}}` in a header: the broker builds the encoded value, which is a secret too. They are removed from the response you receive, and the activity log records the URL with `SECRET` in their place.
+Credentials are stored on the person's device, encrypted with AES-256-GCM. The key lives in the system keychain: Keychain on macOS, Credential Manager on Windows, the Secret Service on Linux. The file is bound to your plugin id, so it cannot be opened from another plugin's folder. Where no keychain is available the file stays readable only by the person's user account, and the Configure form says so. Your code writes `{{secret:key}}` and the broker substitutes the value when the request leaves, only towards a declared host. Secrets are allowed in headers and in the URL path or query, never in the host, never in the body. For HTTP Basic authentication write `{{basic:user:secret}}` in a header: the broker builds the encoded value, which is a secret too. They are removed from the response you receive, and the activity log records the URL with `SECRET` in their place.
 
 ## Prompts
 
