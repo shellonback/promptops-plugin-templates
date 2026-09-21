@@ -36,7 +36,7 @@ The page itself is data. PromptOps draws it with its own components and shows ev
 
 ## Secrets
 
-Credentials are stored on the person's device. Your code writes `{{secret:key}}` and the broker substitutes the value when the request leaves, only towards a declared host. Secrets are allowed in headers and in the URL path or query, never in the host, never in the body. They are removed from the response you receive, and the activity log records the URL with `SECRET` in their place.
+Credentials are stored on the person's device. Your code writes `{{secret:key}}` and the broker substitutes the value when the request leaves, only towards a declared host. Secrets are allowed in headers and in the URL path or query, never in the host, never in the body. For HTTP Basic authentication write `{{basic:user:secret}}` in a header: the broker builds the encoded value, which is a secret too. They are removed from the response you receive, and the activity log records the URL with `SECRET` in their place.
 
 ## Prompts
 

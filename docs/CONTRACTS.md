@@ -14,6 +14,7 @@ Every method receives `sdk` as its **last** argument. Every method may be `async
 |---|---|---|
 | `sdk.http.fetch(url, { method, headers, body })` | `net:<host>` | HTTPS request. Returns `{ status, ok, headers, body }`, with `body` as text |
 | `{{secret:key}}` inside a header, or inside the URL path or query | `secrets` | PromptOps puts the value in when the request leaves. Never in the host, never in the body |
+| `{{basic:user:secret}}` inside a header | `secrets` | HTTP Basic authentication. PromptOps builds `base64(user:password)` for you: `user` is a settings key, `secret` is a secret. Write `Authorization: 'Basic {{basic:email:token}}'` |
 | `sdk.config.get()` | none | The non-secret settings, plus `__secretsSet`: the list of secret keys that have a value |
 | `sdk.storage.get(key)` · `set(key, value)` · `remove(key)` | `storage` | Small JSON storage, private to your plugin |
 | `sdk.notify.toast(message)` | `notify` | A short text notification |

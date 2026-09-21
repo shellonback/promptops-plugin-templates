@@ -199,6 +199,29 @@ export function substituteSecrets(value, secrets) {
   });
 }
 
+/**
+ * `{{basic:user:secret}}` becomes base64(user:password), for HTTP Basic authentication. Headers only.
+ * A plugin cannot build it: it never sees the secret. `user` is a settings key (or a secret), `secret` must be a secret.
+ * Returns the value plus what was produced, so it can be removed from responses like any other secret.
+ */
+export function substituteBasic(value, secrets, config) {
+  const produced = [];
+  const out = String(value).replace(/\{\{basic:([^}]*)\}\}/g, (_, keys) => {
+    const at = keys.indexOf(':');
+    if (at === -1) throw new Error('the basic placeholder is `{{basic:user:secret}}`');
+    const userKey = keys.slice(0, at).trim();
+    const passKey = keys.slice(at + 1).trim();
+    const user = secrets[userKey] || (typeof config?.[userKey] === 'string' ? config[userKey] : '');
+    if (!user) throw new Error(`value \`${userKey}\` is not configured`);
+    if (user.includes(':')) throw new Error(`\`${userKey}\` cannot contain a colon`);
+    if (!secrets[passKey]) throw new Error(`secret \`${passKey}\` is not configured`);
+    const encoded = Buffer.from(`${user}:${secrets[passKey]}`).toString('base64');
+    produced.push(encoded);
+    return encoded;
+  });
+  return { value: out, produced };
+}
+
 export const scrubSecrets = (text, secrets) =>
   Object.values(secrets).filter((s) => s && s.length >= 6).reduce((acc, s) => acc.split(s).join('[secret]'), String(text));
 

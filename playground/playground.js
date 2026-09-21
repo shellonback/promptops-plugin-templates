@@ -531,7 +531,10 @@ async function start() {
 async function load(name) {
   delete document.body.dataset.ready;
   state.plugin = await api('/api/plugin?name=' + encodeURIComponent(name));
-  state.config = Object.fromEntries((state.plugin.manifest.config?.fields ?? []).filter((f) => f.type !== 'secret' && f.default !== undefined).map((f) => [f.key, f.default]));
+  const plainFields = (state.plugin.manifest.config?.fields ?? []).filter((f) => f.type !== 'secret');
+  state.config = Object.fromEntries(plainFields.filter((f) => f.default !== undefined).map((f) => [f.key, f.default]));
+  // `config` in fixtures.json pre-fills the settings with sample values. Secrets are never taken from there.
+  for (const f of plainFields) if (state.plugin.sampleConfig?.[f.key] !== undefined && state.config[f.key] === undefined) state.config[f.key] = state.plugin.sampleConfig[f.key];
   state.secrets = {};
   history.replaceState(null, '', '?plugin=' + encodeURIComponent(name) + (state.mode === 'live' ? '&mode=live' : ''));
   await start();

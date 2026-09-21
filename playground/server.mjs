@@ -15,7 +15,7 @@ import { lookup } from 'node:dns/promises';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  FORBIDDEN_REQUEST_HEADERS, RESPONSE_HEADERS, isForbiddenIp, resolveUrl, scanSource, scrubSecrets, sha256, sourceVisibilityWarning, substituteSecrets, validDocsPath, validateManifest,
+  FORBIDDEN_REQUEST_HEADERS, RESPONSE_HEADERS, isForbiddenIp, resolveUrl, scanSource, scrubSecrets, sha256, sourceVisibilityWarning, substituteBasic, substituteSecrets, validDocsPath, validateManifest,
 } from './lib/policy.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -76,7 +76,9 @@ async function loadPlugin(name) {
 
 const glob = (pattern) => new RegExp('^' + pattern.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$');
 
-async function httpFetch(plugin, params, mode, secrets) {
+async function httpFetch(plugin, params, mode, secrets, config = {}) {
+  if (String(params.url).includes('{{basic:')) throw new Error('the basic placeholder is allowed in headers only');
+  secrets = { ...secrets };
   const { url, host, audit } = resolveUrl(plugin.manifest, params.url, secrets);
   const method = String(params.method || 'GET').toUpperCase();
   if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'].includes(method)) throw Object.assign(new Error('HTTP method not allowed'), { audit });
@@ -87,12 +89,18 @@ async function httpFetch(plugin, params, mode, secrets) {
     if (FORBIDDEN_REQUEST_HEADERS.includes(lower) || lower.startsWith('sec-') || lower.startsWith('proxy-')) {
       throw Object.assign(new Error(`header \`${name}\` cannot be set by a plugin`), { audit });
     }
-    if (String(value).includes('{{secret:') && !plugin.manifest.permissions.includes('secrets')) {
+    if (/\{\{(secret|basic):/.test(String(value)) && !plugin.manifest.permissions.includes('secrets')) {
       throw Object.assign(new Error('permission `secrets` is not granted to this plugin'), { audit });
     }
-    try { headers[name] = substituteSecrets(value, secrets); } catch (e) { throw Object.assign(e, { audit }); }
+    try {
+      // Offline testing: a settings value used as the Basic user counts as set, like secrets do.
+      const settings = mode === 'fixtures' ? new Proxy(config, { get: (t, k) => t[k] || 'fixture-user' }) : config;
+      const basic = substituteBasic(value, secrets, settings);
+      basic.produced.forEach((encoded, i) => { secrets[`__basic_${name}_${i}`] = encoded; });
+      headers[name] = substituteSecrets(basic.value, secrets);
+    } catch (e) { throw Object.assign(e, { audit }); }
   }
-  if (typeof params.body === 'string' && params.body.includes('{{secret:')) {
+  if (typeof params.body === 'string' && /\{\{(secret|basic):/.test(params.body)) {
     throw Object.assign(new Error('secrets are allowed in headers and in the URL path or query only'), { audit });
   }
 
@@ -161,7 +169,7 @@ async function broker(body) {
   storage.set(plugin.name, store);
 
   switch (body.method) {
-    case 'http.fetch': return httpFetch(plugin, params, body.mode, body.secrets ?? {});
+    case 'http.fetch': return httpFetch(plugin, params, body.mode, body.secrets ?? {}, body.config ?? {});
     case 'storage.get': need('storage'); return { result: store[params.key] ?? null };
     case 'storage.set':
       need('storage');
@@ -266,7 +274,9 @@ createServer(async (req, res) => {
       const git = p.fixtures.git ?? {};
       return json(res, 200, { name: p.name, manifest: p.manifest, bundle: p.bundle, bundleSha256: p.bundleSha256, validation: p.validation, findings: p.findings, extras: p.extras,
         fixtureCount: (p.fixtures.http ?? []).length + (p.fixtures.ai ?? []).length + (p.fixtures.git ? 1 : 0) + Object.keys(p.fixtures.benchmark?.results ?? {}).length,
-        repo: { name: String(git.name ?? 'demo-repo'), branch: String(git.branch ?? git.status?.branch ?? 'main') } });
+        repo: { name: String(git.name ?? 'demo-repo'), branch: String(git.branch ?? git.status?.branch ?? 'main') },
+        // Sample settings, so a plugin that needs some (a site, a workspace id) opens offline. Never secrets.
+        sampleConfig: p.fixtures.config && typeof p.fixtures.config === 'object' ? p.fixtures.config : {} });
     }
     if (url.pathname === '/api/broker' && req.method === 'POST') {
       const chunks = [];

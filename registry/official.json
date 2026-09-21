@@ -163,6 +163,148 @@
         "verified": true
       },
       "updated_at": "2026-09-21T12:17:18.000Z"
+    },
+    {
+      "plugin_id": "promptops.trello",
+      "slug": "trello",
+      "name": "Trello",
+      "category": "tasks",
+      "description": "Brings the cards of your Trello boards into the Teams board. Lists become columns, and moving a card moves it in Trello too.",
+      "repo_url": "https://github.com/shellonback/promptops-plugin-trello",
+      "status": "published",
+      "version": "0.1.0",
+      "commit_sha": "80ac6dadfb308835762f725cb96751939a8df9ac",
+      "bundle_sha256": "0656cf01e4a8f78d846d51e4eeaac861e4eb5c437379812d5627b265be1b23af",
+      "source_dir": null,
+      "manifest": {
+        "schemaVersion": 1,
+        "id": "promptops.trello",
+        "name": "Trello",
+        "version": "0.1.0",
+        "category": "tasks",
+        "description": "Brings the cards of your Trello boards into the Teams board. Lists become columns, and moving a card moves it in Trello too.",
+        "repository": "https://github.com/shellonback/promptops-plugin-trello",
+        "minAppVersion": "2.1.0",
+        "entry": "src/plugin.js",
+        "permissions": [
+          "net:api.trello.com",
+          "secrets",
+          "tasks:read",
+          "tasks:write",
+          "prompt:propose"
+        ],
+        "config": {
+          "fields": [
+            {
+              "key": "apiKey",
+              "type": "secret",
+              "label": "Trello API key",
+              "required": true
+            },
+            {
+              "key": "token",
+              "type": "secret",
+              "label": "Trello token, created from that API key",
+              "required": true
+            }
+          ]
+        },
+        "contributes": {
+          "actions": [
+            {
+              "id": "task-to-agent",
+              "title": "Propose to agent",
+              "contexts": [
+                "task"
+              ]
+            }
+          ]
+        }
+      },
+      "publisher": {
+        "handle": "promptops",
+        "display_name": "PromptOps",
+        "kind": "team",
+        "verified": true
+      },
+      "updated_at": "2026-09-21T15:53:21.000Z"
+    },
+    {
+      "plugin_id": "promptops.jira",
+      "slug": "jira",
+      "name": "Jira",
+      "category": "tasks",
+      "description": "Brings the issues of your Jira Cloud projects into the Teams board. Statuses become columns, and moving a card runs the matching Jira transition.",
+      "repo_url": "https://github.com/shellonback/promptops-plugin-jira",
+      "status": "published",
+      "version": "0.1.0",
+      "commit_sha": "8ad78491ee20e9238bca7df60a8233fac67bfb11",
+      "bundle_sha256": "5479dacb998a2ad38ae71261d8f5ad38a3a47122f58618d9e7ac20c0fc145519",
+      "source_dir": null,
+      "manifest": {
+        "schemaVersion": 1,
+        "id": "promptops.jira",
+        "name": "Jira",
+        "version": "0.1.0",
+        "category": "tasks",
+        "description": "Brings the issues of your Jira Cloud projects into the Teams board. Statuses become columns, and moving a card runs the matching Jira transition.",
+        "repository": "https://github.com/shellonback/promptops-plugin-jira",
+        "minAppVersion": "2.1.0",
+        "entry": "src/plugin.js",
+        "permissions": [
+          "net:api.atlassian.com",
+          "secrets",
+          "tasks:read",
+          "tasks:write",
+          "prompt:propose"
+        ],
+        "config": {
+          "fields": [
+            {
+              "key": "site",
+              "type": "text",
+              "label": "Your Jira site, for example acme.atlassian.net",
+              "required": true
+            },
+            {
+              "key": "cloudId",
+              "type": "text",
+              "label": "Cloud ID of that site",
+              "required": true
+            },
+            {
+              "key": "email",
+              "type": "text",
+              "label": "Email of your Atlassian account",
+              "required": true
+            },
+            {
+              "key": "token",
+              "type": "secret",
+              "label": "Atlassian API token",
+              "required": true
+            }
+          ]
+        },
+        "contributes": {
+          "actions": [
+            {
+              "id": "task-to-agent",
+              "title": "Propose to agent",
+              "contexts": [
+                "task"
+              ]
+            }
+          ]
+        }
+      },
+      "publisher": {
+        "handle": "promptops",
+        "display_name": "PromptOps",
+        "kind": "team",
+        "verified": true
+      },
+      "updated_at": "2026-09-21T15:53:29.000Z"
     }
   ]
 }
