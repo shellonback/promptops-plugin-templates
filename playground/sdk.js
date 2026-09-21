@@ -68,7 +68,13 @@
     // Solo `docs/*.md|markdown|txt`. L'utente vede il contenuto e conferma ogni file.
     workspace: Object.freeze({ writeFile: (repo, path, content) => call('workspace.writeFile', { repo, path: String(path), content: String(content) }) }),
     // Il modello gira senza strumenti e restituisce testo. L'utente vede il prompt e conferma ogni richiesta.
-    ai: Object.freeze({ generate: (opts) => call('ai.generate', typeof opts === 'string' ? { prompt: opts } : { prompt: String(opts && opts.prompt || ''), model: opts && opts.model || undefined }) }),
+    ai: Object.freeze({
+      generate: (opts) => call('ai.generate', typeof opts === 'string' ? { prompt: opts } : { prompt: String(opts && opts.prompt || ''), model: opts && opts.model || undefined }),
+      // Misure di velocità. Il prompt è di PromptOps: il plugin sceglie i modelli dall'elenco e riceve solo numeri.
+      // L'avanzamento arriva con promptops.events.on('benchmark.progress', handler).
+      benchmarkModels: () => call('ai.benchmarkModels'),
+      benchmark: (models) => call('ai.benchmark', { models: Array.isArray(models) ? models.map(String) : [] }),
+    }),
     pages: Object.freeze({ update: (pageId, view) => call('pages.update', { pageId: String(pageId), view }) }),
     log: (...args) => call('log', { message: args.map(String).join(' ') }),
   });

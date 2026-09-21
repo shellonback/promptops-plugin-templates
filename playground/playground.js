@@ -74,13 +74,24 @@ addEventListener('message', async (ev) => {
   }
   if (msg.__po !== 'call') return;
   // Writing a file and running the model ask the person first, with the full content in view.
-  const confirmed = ['workspace.writeFile', 'ai.generate'].includes(msg.method) ? await confirmCall(String(msg.method), msg.params || {}) : undefined;
+  const confirmed = ['workspace.writeFile', 'ai.generate', 'ai.benchmark'].includes(msg.method) ? await confirmCall(String(msg.method), msg.params || {}) : undefined;
   const res = await api('/api/broker', { plugin: state.plugin.name, method: String(msg.method), params: msg.params || {}, mode: state.mode, config: state.config, secrets: state.secrets, confirmed });
   log({ method: msg.method, target: res.audit ?? '', ok: res.ok, error: res.error });
   if (res.ui?.toast) toast(res.ui.toast);
   if (res.ui?.proposal) proposal(res.ui.proposal);
   if (res.ui?.file) writtenFile(res.ui.file);
   if (res.ui?.pageUpdate) state.onPageUpdate?.(res.ui.pageUpdate);
+  // PromptOps reports every finished run while it measures. Here the numbers are ready at once,
+  // so the reports are replayed with a short pause: your progress handler runs as it would in the app.
+  if (res.ok && res.ui?.benchmark) {
+    const all = res.result.results;
+    for (let index = 0; index < all.length; index++) {
+      for (let sample = 1; sample <= 3; sample++) {
+        ev.source.postMessage({ __po: 'event', name: 'benchmark.progress', payload: { index, total: all.length, modelId: all[index].id, label: all[index].label, sample, samples: 3, results: all.slice(0, index) } }, '*');
+        await new Promise((r) => setTimeout(r, 220));
+      }
+    }
+  }
   ev.source.postMessage({ __po: 'result', callId: msg.callId, ok: res.ok, result: res.result, error: res.error }, '*');
 });
 
@@ -129,6 +140,21 @@ function proposal({ title, text }) {
 /** Same two questions PromptOps asks. Resolves true only on an explicit yes. */
 function confirmCall(method, params) {
   const ai = method === 'ai.generate';
+  if (method === 'ai.benchmark') {
+    const ids = Array.isArray(params.models) ? params.models.map(String) : [];
+    return new Promise((resolve) => {
+      const done = (yes) => { $('#modal-root').replaceChildren(); resolve(yes); };
+      $('#modal-root').replaceChildren(
+        h('div', { class: 'backdrop', onclick: () => done(false) }),
+        h('div', { class: 'modal', role: 'alertdialog', 'aria-modal': 'true' },
+          h('div', { class: 'head' }, `Measure ${ids.length} model${ids.length === 1 ? '' : 's'} on your accounts?`, h('div', { class: 'muted small' }, state.plugin.manifest.name + ' · plugin')),
+          h('div', { class: 'body' },
+            h('div', { class: 'note' }, 'In PromptOps this runs a short fixed prompt, written by the app, three times per model. The plugin gets numbers only. The playground calls no model: the numbers come from `benchmark` in fixtures.json.'),
+            h('div', { class: 'muted small', style: 'margin:8px 0 4px' }, `${ids.length * 3} calls in total`),
+            h('pre', { class: 'text' }, ids.join('\n'))),
+          h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: () => done(false) }, "Don't run"), h('button', { class: 'btn primary', onclick: () => done(true) }, 'Run the test'))));
+    });
+  }
   return new Promise((resolve) => {
     const done = (yes) => { $('#modal-root').replaceChildren(); resolve(yes); };
     $('#modal-root').replaceChildren(
@@ -421,7 +447,7 @@ const previews = {
         case 'progress': return h('div', {}, b.label ? h('div', { class: 'muted small' }, b.label) : null, h('div', { class: 'track' }, h('div', { class: 'fill', style: `width:${Math.round(b.value * 100)}%` })));
         case 'list': return b.items.length ? h('div', { class: 'list' }, b.items.map((i) => h('div', { class: 'item' }, h('div', { class: 't' }, i.title), i.subtitle ? h('div', { class: 'muted small' }, i.subtitle) : null)))
           : h('div', { class: 'pg-text muted' }, b.empty);
-        case 'table': return h('table', { class: 'table' }, h('thead', {}, h('tr', {}, b.columns.map((c) => h('th', {}, c)))), h('tbody', {}, b.rows.map((r) => h('tr', {}, r.map((c) => h('td', {}, c))))));
+        case 'table': return h('div', { class: 'pg-scroll' }, h('table', { class: 'data' }, h('thead', {}, h('tr', {}, b.columns.map((c) => h('th', {}, c)))), h('tbody', {}, b.rows.map((r) => h('tr', {}, r.map((c) => h('td', {}, c)))))));
         case 'actions': return h('div', { class: 'row' }, b.items.map((a) => { const el = h('button', { class: 'btn' + (a.style === 'primary' ? ' primary' : ''), onclick: () => send('action', a.id) }, a.label); el.disabled = a.disabled; return el; }));
         case 'output': {
           if (!b.editable) return h('div', { class: 'pg-field' }, h('div', { class: 'pg-label' }, b.label), h('pre', { class: 'text' }, b.text));

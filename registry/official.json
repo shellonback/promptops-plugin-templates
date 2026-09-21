@@ -115,6 +115,54 @@
         "verified": true
       },
       "updated_at": "2026-09-20T22:27:18.000Z"
+    },
+    {
+      "plugin_id": "promptops.agent-evals",
+      "slug": "agent-evals",
+      "name": "AI Agent Evals",
+      "category": "pages",
+      "description": "Measures how fast your AI models really answer, through the same CLI you use every day, and compares each one with its expected range and with your own history.",
+      "repo_url": "https://github.com/shellonback/promptops-plugin-agent-evals",
+      "status": "published",
+      "version": "0.1.0",
+      "commit_sha": "8afe52e82f7ab32c684d0aec9240f583f55c29d4",
+      "bundle_sha256": "8da3401d69700c932e7c92393410d1fbf4449d24f0ab05d0738bce12c06669eb",
+      "source_dir": null,
+      "manifest": {
+        "schemaVersion": 1,
+        "id": "promptops.agent-evals",
+        "name": "AI Agent Evals",
+        "version": "0.1.0",
+        "category": "pages",
+        "description": "Measures how fast your AI models really answer, through the same CLI you use every day, and compares each one with its expected range and with your own history.",
+        "repository": "https://github.com/shellonback/promptops-plugin-agent-evals",
+        "minAppVersion": "2.1.0",
+        "entry": "dist/plugin.js",
+        "permissions": [
+          "ai:benchmark",
+          "storage"
+        ],
+        "providers": [
+          "claude-code-cli",
+          "codex"
+        ],
+        "contributes": {
+          "pages": [
+            {
+              "id": "evals",
+              "title": "AI Agent Evals",
+              "icon": "ti-gauge"
+            }
+          ]
+        }
+      },
+      "publisher": {
+        "handle": "promptops",
+        "display_name": "PromptOps",
+        "kind": "team",
+        "verified": true
+      },
+      "updated_at": "2026-09-21T07:40:31.000Z"
     }
   ]
 }

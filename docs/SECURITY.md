@@ -22,11 +22,13 @@ For `sdk.http.fetch` the broker requires: HTTPS, port 443, a host that appears i
 
 ## Pages: repositories, files and the model
 
-A `pages` plugin can ask for three permissions that no other section can have. Each one goes through the person.
+A `pages` plugin can ask for four permissions that no other section can have. Each one goes through the person.
 
 - **`git:read`**. The plugin never names a folder. PromptOps draws the repository picker and gives the plugin a handle, valid only for that plugin and only until the app closes. Git runs with fixed arguments and no shell. External diff drivers and text filters of the repository are not executed. Commit authors come without email addresses.
 - **`workspace:write`**. Only text files under `docs/` of the picked repository. Symbolic links that leave the repository are refused. Before every write the person sees the path, whether a file is replaced, and the full content.
 - **`ai:generate`**. The prompt runs on the person's own Claude with no tools, no MCP servers and no skills, in an empty folder. It cannot read files, run commands or go online: it can only answer with text. Before every run the person sees the full prompt. One run at a time, thirty per hour. Today it works on macOS and Linux, with Claude only.
+
+- **`ai:benchmark`**. Speed measurements. The prompt belongs to PromptOps and is fixed, the CLIs run in an empty folder, and the plugin receives numbers only: never the text a model wrote. With no way in and no way out, it is safe with every provider. Before a run the person sees the models and the number of calls on their accounts. Six runs per hour.
 
 `git:read` together with a `net:` permission means repository content could leave the device. It is allowed, but the scanner flags it and the reviewer checks what is sent.
 

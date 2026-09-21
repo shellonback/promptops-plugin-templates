@@ -199,6 +199,28 @@ async function broker(body) {
       }
       return { audit, result: { text: (await runClaude(prompt, params.model)).slice(0, 200_000), truncated: false } };
     }
+    // Speed measurements. In PromptOps the app owns the prompt and runs the CLIs: the plugin gets numbers only.
+    // The playground never calls a model for this: numbers come from `benchmark` in fixtures.json, in both modes.
+    case 'ai.benchmarkModels': need('ai:benchmark'); return { audit: 'models', result: { ok: true, data: plugin.fixtures.benchmark?.models ?? [], modes: [] } };
+    case 'ai.benchmark': {
+      need('ai:benchmark');
+      const known = plugin.fixtures.benchmark?.models ?? [];
+      const ids = [...new Set(Array.isArray(params.models) ? params.models.map(String) : [])];
+      if (!ids.length || ids.length > 12) throw new Error('1 to 12 models per measurement');
+      const unknown = ids.find((id) => !known.some((m) => m.id === id));
+      if (unknown) throw new Error(`model \`${unknown.slice(0, 60)}\` is not in the catalog`);
+      if (body.confirmed !== true) throw new Error('user_denied: the person did not confirm');
+      const results = ids.map((id) => {
+        const m = known.find((x) => x.id === id);
+        const r = plugin.fixtures.benchmark?.results?.[id] ?? { error: 'no `benchmark.results` fixture for this model' };
+        const base = { id, label: m.label, provider: m.provider, providerLabel: m.providerLabel, baseline: m.baseline ?? null, history: m.history ?? { runs: 0, medianTps: null, lastRunAt: null } };
+        if (r.error) return { ...base, ok: false, error: String(r.error), classification: 'unknown' };
+        const band = m.baseline?.expectedTps;
+        const classification = !band ? 'unknown' : r.tokensPerSec < band.min ? 'below' : r.tokensPerSec > band.max ? 'above' : 'within';
+        return { ...base, ok: true, tokensEstimated: false, samples: [], wallMs: (r.sampleMs ?? 0) * 3, ...r, classification };
+      });
+      return { audit: `${ids.length} model(s) · 3 runs each`, result: { results }, ui: { benchmark: { labels: results.map((r) => r.label) } } };
+    }
     case 'pages.update': {
       const pageId = String(params.pageId ?? '');
       if (!(plugin.manifest.contributes?.pages ?? []).some((p) => p.id === pageId)) throw new Error('page not declared in the manifest');
@@ -240,7 +262,7 @@ createServer(async (req, res) => {
       const p = await loadPlugin(url.searchParams.get('name'));
       const git = p.fixtures.git ?? {};
       return json(res, 200, { name: p.name, manifest: p.manifest, bundle: p.bundle, bundleSha256: p.bundleSha256, validation: p.validation, findings: p.findings, extras: p.extras,
-        fixtureCount: (p.fixtures.http ?? []).length + (p.fixtures.ai ?? []).length + (p.fixtures.git ? 1 : 0),
+        fixtureCount: (p.fixtures.http ?? []).length + (p.fixtures.ai ?? []).length + (p.fixtures.git ? 1 : 0) + Object.keys(p.fixtures.benchmark?.results ?? {}).length,
         repo: { name: String(git.name ?? 'demo-repo'), branch: String(git.branch ?? git.status?.branch ?? 'main') } });
     }
     if (url.pathname === '/api/broker' && req.method === 'POST') {

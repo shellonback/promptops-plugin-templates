@@ -8,7 +8,7 @@ export const CATEGORIES = ['tasks', 'code', 'data', 'providers', 'agent', 'conte
 export const ALLOWED_PERMISSIONS = [
   'secrets', 'storage', 'notify', 'sessions:read', 'tasks:read', 'tasks:write', 'prompt:propose', 'agents:propose',
   // Section `pages` only. Each one goes through a choice or a confirmation by the person.
-  'git:read', 'workspace:write', 'ai:generate',
+  'git:read', 'workspace:write', 'ai:generate', 'ai:benchmark',
 ];
 /**
  * AI providers a plugin can say it works with (`providers` in the manifest). Optional.
@@ -20,7 +20,7 @@ export const PROVIDERS = {
 };
 export const MAX_PROVIDERS = 11;
 
-export const PAGES_ONLY_PERMISSIONS = ['git:read', 'workspace:write', 'ai:generate'];
+export const PAGES_ONLY_PERMISSIONS = ['git:read', 'workspace:write', 'ai:generate', 'ai:benchmark'];
 export const MAX_MENU_PAGES = 3;
 
 export const PERMISSION_TEXT = {
@@ -35,6 +35,7 @@ export const PERMISSION_TEXT = {
   'git:read': 'Read branch, changed files, commits and diff of a repository you pick on its page',
   'workspace:write': 'Write text files in the docs/ folder of that repository. You confirm every file',
   'ai:generate': 'Run a prompt on your own Claude, with no tools and no file access. You see and confirm every prompt',
+  'ai:benchmark': 'Measure how fast your AI models answer. PromptOps writes the prompt and the plugin gets numbers only. You confirm every run',
 };
 
 export const describePermission = (p) => (p.startsWith('net:') ? `Connect to ${p.slice(4)} over HTTPS` : PERMISSION_TEXT[p] ?? p);

@@ -130,3 +130,4 @@ table.data th { color: var(--text-3); font-weight: 600; font-size: 11px; text-tr
 .pg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
 .pg-stat { border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; display: flex; flex-direction: column; min-width: 0; }
 .pg-stat strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-md); } .pg-scroll table.data td, .pg-scroll table.data th { white-space: nowrap; }

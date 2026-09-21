@@ -11,6 +11,7 @@ const TEXT = {
   'git:read': 'Read branch, changed files, commits and diff of a repository you pick on its page',
   'workspace:write': 'Write text files in the docs/ folder of that repository. You confirm every file',
   'ai:generate': 'Run a prompt on your own Claude, with no tools and no file access. You see and confirm every prompt',
+  'ai:benchmark': 'Measure how fast your AI models answer. PromptOps writes the prompt and the plugin gets numbers only. You confirm every run',
 };
 // Provider ids a manifest can list under `providers`. Same list as lib/policy.mjs.
 export const PROVIDER_NAMES = {

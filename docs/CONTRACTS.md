@@ -21,6 +21,7 @@ Every method receives `sdk` as its **last** argument. Every method may be `async
 | `sdk.git.status(repo)` · `log(repo, limit)` · `diff(repo, { staged })` | `git:read` | Read-only git data of the repository the person picked. `pages` only |
 | `sdk.workspace.writeFile(repo, path, content)` | `workspace:write` | Writes a text file under `docs/`. The person sees it and confirms. `pages` only |
 | `sdk.ai.generate({ prompt, model })` | `ai:generate` | Runs the prompt on the person's Claude, with no tools. The person sees it and confirms. `pages` only |
+| `sdk.ai.benchmarkModels()` · `sdk.ai.benchmark(modelIds)` | `ai:benchmark` | Speed measurements. PromptOps owns the prompt and you get numbers only. The person confirms every run. `pages` only |
 | `sdk.pages.update(pageId, view)` | none | Pushes a new version of your page while you work |
 | `sdk.log(...values)` | none | Writes a line in the plugin activity log |
 
@@ -178,6 +179,19 @@ Field kinds: `text`, `textarea` (`rows`), `select` and `choice` (`options`: `{ v
 | `sdk.git.diff(repo, { staged })` | `{ diff, truncated }`, 200 000 bytes at most |
 | `sdk.workspace.writeFile(repo, path, content)` | `{ path, repo, overwritten }`. `path` must be `docs/<name>.md`, `.markdown` or `.txt` |
 | `sdk.ai.generate({ prompt, model })` | `{ text, truncated }`. One run at a time, thirty per hour |
+| `sdk.ai.benchmarkModels()` | `{ data: [{ id, label, provider, providerLabel, available, baseline: { tier, expectedTps: { min, max } }, history: { runs, medianTps, lastRunAt } }] }` |
+| `sdk.ai.benchmark(modelIds)` | `{ results: [{ id, label, providerLabel, ok, error, tokensPerSec, outputTokens, tokensEstimated, sampleMs, samples, classification, baseline, history }] }`. One to twelve ids from the list above. Six runs per hour |
+
+**Measuring speed.** With `ai:benchmark` you never write a prompt and you never read an answer. PromptOps runs a short fixed task three times per model, in an empty folder, and gives you the middle run as numbers. `classification` is `below`, `within`, `above` or `unknown` against `baseline.expectedTps`. While it measures, PromptOps reports every finished run:
+
+```js
+promptops.events.on('benchmark.progress', async (p, sdk) => {
+  // p = { index, total, modelId, label, sample, samples, results, done }
+  await sdk.pages.update('my-page', view());
+});
+```
+
+Because the prompt is not yours and the answer never reaches you, this works with every provider, not only with the ones that can run without tools.
 
 ## agent
 
@@ -218,7 +232,7 @@ promptops.actions.register('send-test', async (context, sdk) => { /* ... */ });
 | `version` | Semantic: `0.1.0`. Every submission needs a higher one |
 | `category` | One of `tasks`, `code`, `data`, `providers`, `context`, `notify`, `agent`, `pages` |
 | `entry` | Relative path to **one** `.js` file, already built. 2 MB at most. No build step runs on install |
-| `permissions` | Array. `net:<host>` per host, plus any of `secrets`, `storage`, `notify`, `sessions:read`, `tasks:read`, `tasks:write`, `prompt:propose`, `agents:propose`. For `pages` also `git:read`, `workspace:write`, `ai:generate` |
+| `permissions` | Array. `net:<host>` per host, plus any of `secrets`, `storage`, `notify`, `sessions:read`, `tasks:read`, `tasks:write`, `prompt:propose`, `agents:propose`. For `pages` also `git:read`, `workspace:write`, `ai:generate`, `ai:benchmark` |
 | `config.fields` | `[{ key, type, label, required?, default?, options? }]` with `type`: `text`, `secret`, `number`, `boolean`, `select`, `multiselect`, `url`. PromptOps builds the form |
 | `description` | Shown in the catalog |
 | `repository` | Optional. Your public GitHub repository, as `https://github.com/owner/name`. PromptOps shows the owner and its avatar next to the plugin |
