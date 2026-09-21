@@ -86,7 +86,7 @@ node playground/server.mjs --plugin ../my-plugin
 |---|---|
 | `promptops-plugin.json` | Name, description, the hosts you call, the settings people fill in |
 | `src/plugin.js` | The calls to your service and the mapping to the PromptOps shapes |
-| `fixtures.json` | Sample answers from your service, so the plugin works offline |
+| `fixtures.json` | Sample answers from your service, so the plugin works offline. Add a `config` object to pre-fill settings your plugin needs, like a site or a workspace id. Never secrets |
 
 **4. Check it.**
 
