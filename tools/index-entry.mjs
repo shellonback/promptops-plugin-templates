@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Prints the registry/official.json entry for a plugin folder, pinned to its current commit.
-//   node tools/index-entry.mjs ../plugins/clickup --publisher promptops --publisher-name PromptOps --verified
+//   node tools/index-entry.mjs ../plugins/clickup --publisher promptops --publisher-name "Shellonback SRL" --verified
 // The folder must be a git repository whose HEAD is pushed: the app downloads the bundle
 // from GitHub at that commit and refuses it if the hash differs.
 import { readFile } from 'node:fs/promises';
