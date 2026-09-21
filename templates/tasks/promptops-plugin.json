@@ -6,7 +6,7 @@
   "category": "tasks",
   "description": "Shows the issues of your GitHub repositories as tasks in the Teams board.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": ["net:api.github.com", "secrets", "tasks:read", "tasks:write", "prompt:propose"],
   "config": {
     "fields": [

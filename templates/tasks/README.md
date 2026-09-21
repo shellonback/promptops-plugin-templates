@@ -37,7 +37,7 @@ Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#tasks).
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, section, hosts, permissions, settings |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `fixtures.json` | Sample answers for Fixtures mode. First match wins, `*` matches anything |
 
 ## Make it yours
@@ -54,7 +54,7 @@ Then:
 1. In `promptops-plugin.json` replace `net:api.github.com` with the host of your tracker. One `net:` entry per host.
 2. Remove `tasks:write` if your plugin does not change tasks, and delete `setStatus` from the code.
 3. Replace the settings in `config.fields` with what your service needs: workspace, project key, token.
-4. In `dist/plugin.js` rewrite `github()` for your API, then `toTask()`: it is the only place that knows the remote shape.
+4. In `src/plugin.js` rewrite `github()` for your API, then `toTask()`: it is the only place that knows the remote shape.
 5. Map your workflow in `STATUSES`. `type` must be `todo`, `in_progress` or `done`.
 6. Record real answers from your API into `fixtures.json`, with private data removed.
 

@@ -32,7 +32,7 @@ Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#code).
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, section, hosts, permissions, settings |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `fixtures.json` | Sample answers for Fixtures mode. First match wins, `*` matches anything |
 
 ## Make it yours
@@ -47,7 +47,7 @@ node playground/server.mjs --plugin ../my-plugin
 Then:
 
 1. In `promptops-plugin.json` replace `net:api.github.com` with the host of your service.
-2. In `dist/plugin.js` rewrite `github()` for your API.
+2. In `src/plugin.js` rewrite `github()` for your API.
 3. Keep `safeRepo()` or write your own check. Never build a URL from input you did not validate.
 4. Map your CI states to the four allowed values in `listChecks`.
 5. Record real answers into `fixtures.json`.

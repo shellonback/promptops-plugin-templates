@@ -32,7 +32,7 @@ Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#context).
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, section, hosts, permissions, settings |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `fixtures.json` | Sample answers for Fixtures mode. First match wins, `*` matches anything |
 
 ## Make it yours
@@ -47,7 +47,7 @@ node playground/server.mjs --plugin ../my-plugin
 Then:
 
 1. In `promptops-plugin.json` replace `net:en.wikipedia.org` with the host of your source. Add `secrets` and a `secret` field if it needs a token.
-2. In `dist/plugin.js` rewrite `wiki()` for your API, then `search` and `get`.
+2. In `src/plugin.js` rewrite `wiki()` for your API, then `search` and `get`.
 3. Strip HTML from excerpts and content. Keep `content` under 50 000 characters.
 4. Keep the wording in `use-as-context` that says where the text comes from and that it is reference material. Text from outside must never read like an instruction to the agent.
 5. Record real answers into `fixtures.json`.

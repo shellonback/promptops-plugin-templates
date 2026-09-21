@@ -231,7 +231,7 @@ promptops.actions.register('send-test', async (context, sdk) => { /* ... */ });
 | `name` | 2 to 80 characters |
 | `version` | Semantic: `0.1.0`. Every submission needs a higher one |
 | `category` | One of `tasks`, `code`, `data`, `providers`, `context`, `notify`, `agent`, `pages` |
-| `entry` | Relative path to **one** `.js` file, already built. 2 MB at most. No build step runs on install |
+| `entry` | Relative path to **one** `.js` file, 2 MB at most. It is the file that runs, and the file the reviewer reads. The templates use `src/plugin.js`: plain JavaScript, no build step. No build ever runs on install |
 | `permissions` | Array. `net:<host>` per host, plus any of `secrets`, `storage`, `notify`, `sessions:read`, `tasks:read`, `tasks:write`, `prompt:propose`, `agents:propose`. For `pages` also `git:read`, `workspace:write`, `ai:generate`, `ai:benchmark` |
 | `config.fields` | `[{ key, type, label, required?, default?, options? }]` with `type`: `text`, `secret`, `number`, `boolean`, `select`, `multiselect`, `url`. PromptOps builds the form |
 | `description` | Shown in the catalog |
@@ -240,5 +240,7 @@ promptops.actions.register('send-test', async (context, sdk) => { /* ... */ });
 | `contributes.pages` | `pages` only. One to three menu entries: `{ id, title, icon }` |
 
 `providers` is your statement: "it works with these". List only what you tested. Leave it out if your plugin does not depend on the provider, like a task source or a notifier. A plugin that uses `ai:generate` runs on Claude, so list `claude-code-cli`.
+
+**Your code must be readable.** Write `src/plugin.js` by hand, as the templates do, and what people read is what runs. If you use a bundler, point `entry` at its output, keep it unminified and commit your sources in `src/` too. A repository that shows only a `dist/` folder looks like the code is missing, and a minified file cannot be reviewed: the validator and the registry scan both flag it.
 
 Hosts must be public domain names. No IP addresses, wildcards, `localhost` or internal domains.

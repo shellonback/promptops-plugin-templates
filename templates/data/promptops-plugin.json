@@ -6,6 +6,6 @@
   "category": "data",
   "description": "Browse the resources of a REST API as tables, in a panel next to your session.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": ["net:jsonplaceholder.typicode.com"]
 }

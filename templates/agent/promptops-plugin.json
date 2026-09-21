@@ -6,7 +6,7 @@
   "category": "agent",
   "description": "A skill and two quick actions for careful code reviews.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": [],
   "contributes": {
     "skills": [

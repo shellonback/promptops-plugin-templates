@@ -4,7 +4,8 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
-import { describePermission, scanSource, sha256, validateManifest } from '../playground/lib/policy.mjs';
+import { existsSync } from 'node:fs';
+import { describePermission, scanSource, sha256, sourceVisibilityWarning, validateManifest } from '../playground/lib/policy.mjs';
 
 const dir = resolve(process.cwd(), process.argv[2] ?? '.');
 const fail = (msg) => { console.error('\n  ✗ ' + msg + '\n'); process.exit(1); };
@@ -15,6 +16,8 @@ try { manifest = JSON.parse(raw); } catch (e) { fail('promptops-plugin.json is n
 
 const { errors, warnings, hosts } = validateManifest(manifest);
 const bundle = errors.length ? null : await readFile(join(dir, manifest.entry)).catch(() => null);
+const hidden = sourceVisibilityWarning(manifest.entry, (name) => existsSync(join(dir, name)));
+if (hidden) warnings.push(hidden);
 if (!errors.length && !bundle) errors.push(`The bundle \`${manifest.entry}\` does not exist.`);
 if (bundle && bundle.length > 2_000_000) errors.push('The bundle is over the 2 MB limit.');
 

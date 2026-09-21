@@ -6,7 +6,7 @@
   "category": "pages",
   "description": "Adds a page that turns the recent commits of a repository into release notes and saves them in docs/.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": ["git:read", "ai:generate", "workspace:write"],
   "providers": ["claude-code-cli"],
   "contributes": {

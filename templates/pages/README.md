@@ -56,7 +56,7 @@ A "no" rejects the call with an error that starts with `user_denied`. The templa
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, the menu entry, permissions |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `fixtures.json` | The sample repository under `git`, and sample answers of the model under `ai`. The first `ai` entry whose `match` is inside the prompt wins |
 
 ## Make it yours
@@ -72,7 +72,7 @@ Then:
 
 1. In `promptops-plugin.json` name your menu entry: `title`, 40 characters at most, and a [Tabler icon](https://tabler.io/icons).
 2. Keep only the permissions you use. A page that needs no repository needs none of the three.
-3. In `dist/plugin.js` change `view()`: it is the whole page, built from your state.
+3. In `src/plugin.js` change `view()`: it is the whole page, built from your state.
 4. In `event()` react to the button ids you declared, update the state and return `view()` again.
 5. Change `prompt()`. Say what you want back and nothing else: the model answers with text only.
 

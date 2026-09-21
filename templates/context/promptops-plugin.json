@@ -6,7 +6,7 @@
   "category": "context",
   "description": "Search a knowledge source and hand a document to the person as context for their agent.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": ["net:en.wikipedia.org", "prompt:propose"],
   "contributes": {
     "actions": [{ "id": "use-as-context", "title": "Propose as context", "contexts": ["document"] }]

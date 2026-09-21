@@ -23,7 +23,7 @@ Open http://127.0.0.1:4173 and choose **agent · Code Review Pack** in the dropd
 | `contributes.skills[]` with `id`, `title`, `description`, `file` | A skill the person can attach to an agent. `file` is a Markdown file in your plugin |
 | `contributes.quickActions[]` with `id`, `title`, `prompt` | A one-click prompt the person reviews before it is sent |
 
-`dist/plugin.js` stays empty on purpose. `entry` is required, and an empty bundle asks for no permission.
+`src/plugin.js` stays empty on purpose. `entry` is required, and an empty bundle asks for no permission.
 
 Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#agent).
 
@@ -32,7 +32,7 @@ Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#agent).
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, section, hosts, permissions, settings |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `skills/*.md` | The skills, one Markdown file each |
 | `fixtures.json` | Empty: this template makes no requests |
 

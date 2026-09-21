@@ -6,7 +6,7 @@
   "category": "providers",
   "description": "Shows how much of your OpenRouter credit is used, in the Usage section.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": ["net:openrouter.ai", "secrets"],
   "config": {
     "fields": [

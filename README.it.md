@@ -83,7 +83,7 @@ node playground/server.mjs --plugin ../mio-plugin
 | File | Cosa cambiare |
 |---|---|
 | `promptops-plugin.json` | Nome, descrizione, host che chiami, impostazioni che la persona compila |
-| `dist/plugin.js` | Le chiamate al tuo servizio e la conversione nelle forme di PromptOps |
+| `src/plugin.js` | Le chiamate al tuo servizio e la conversione nelle forme di PromptOps |
 | `fixtures.json` | Risposte di esempio del tuo servizio, così il plugin funziona offline |
 
 **4. Controllalo.**
@@ -133,7 +133,7 @@ I segreti scritti nel playground restano nella scheda del browser e nella memori
 | Repository | Di chi è | Cosa contiene |
 |---|---|---|
 | Questo | PromptOps | I sette modelli, il playground, gli strumenti e i contratti |
-| Il tuo plugin | **Tuo** | Solo il tuo plugin: `promptops-plugin.json`, `dist/plugin.js`, `fixtures.json`, il tuo README |
+| Il tuo plugin | **Tuo** | Solo il tuo plugin: `promptops-plugin.json`, `src/plugin.js`, `fixtures.json`, il tuo README |
 
 I sette modelli stanno in **un solo repository di proposito**. Condividono playground, copia dell'SDK, regole e strumenti, quindi non possono divergere, e una modifica a un contratto li aggiorna tutti con un solo commit.
 

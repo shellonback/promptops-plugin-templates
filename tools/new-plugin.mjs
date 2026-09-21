@@ -75,7 +75,7 @@ Open http://127.0.0.1:4173. Your plugin is the entry that starts with \`local:\`
 | File | What it is |
 |---|---|
 | \`promptops-plugin.json\` | The manifest: id, section, hosts, permissions, settings |
-| \`dist/plugin.js\` | The plugin. One file, already built |
+| \`src/plugin.js\` | The source of the plugin. Plain JavaScript, no build step: what you read is what runs |
 | \`fixtures.json\` | Sample answers for offline testing. Not used by PromptOps |
 
 Method names and return shapes: [section contracts](${TEMPLATES_URL}/blob/main/docs/CONTRACTS.md#${section}).

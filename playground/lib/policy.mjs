@@ -90,7 +90,7 @@ export function validateManifest(m) {
   if (typeof m.name !== 'string' || m.name.length < 2 || m.name.length > 80) errors.push('`name` must be 2 to 80 characters.');
   if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(m.version ?? '')) errors.push('`version` must be semantic, for example 0.1.0.');
   if (!CATEGORIES.includes(m.category)) errors.push('`category` must be one of: ' + CATEGORIES.join(', ') + '.');
-  if (!validRelPath(m.entry, 'js')) errors.push('`entry` must be a relative path to a .js file, for example dist/plugin.js.');
+  if (!validRelPath(m.entry, 'js')) errors.push('`entry` must be a relative path to a .js file, for example src/plugin.js.');
   if (!Array.isArray(m.permissions)) errors.push('`permissions` must be an array. Use [] if the plugin needs nothing.');
   for (const p of Array.isArray(m.permissions) ? m.permissions : []) {
     if (typeof p !== 'string') errors.push('Every permission must be a string.');
@@ -152,10 +152,26 @@ const HEURISTICS = [
   ['warn', 'Signs of obfuscation', /\b_0x[0-9a-f]{4,}\b|(?:\\x[0-9a-f]{2}){8,}|\batob\s*\(|String\.fromCharCode\s*\((?:\s*\d+\s*,){8,}/i],
 ];
 
+/** A reviewer reads the file that runs. Very long lines mean it was minified. */
+export const MINIFIED_LINE = 1500;
+
+/**
+ * People and reviewers look for your code. If `entry` is a build output, the sources must be next to it.
+ * `hasDir(name)` says whether a folder exists in the plugin. Returns a warning or null.
+ */
+export function sourceVisibilityWarning(entry, hasDir) {
+  const top = String(entry ?? '').split('/')[0];
+  if (!['dist', 'build', 'out', 'lib'].includes(top)) return null;
+  if (hasDir('src')) return null;
+  return `\`entry\` is in \`${top}/\`, which reads as a build output, and there is no \`src/\` folder. Put your code in \`src/\` and point \`entry\` at it, or commit the sources next to the build: review needs code people can read.`;
+}
+
 /** Same heuristics the reviewer sees in the registry scan. */
 export function scanSource(path, source, declaredHosts) {
   const findings = [];
   const lines = source.split('\n');
+  const long = lines.findIndex((l) => l.length > MINIFIED_LINE);
+  if (long !== -1) findings.push({ severity: 'warn', title: 'Minified code: review needs a file people can read', file: path, line: long + 1, excerpt: lines[long].trim().slice(0, 160) });
   for (const [severity, title, regex] of HEURISTICS) {
     lines.forEach((line, i) => {
       if (regex.test(line)) findings.push({ severity, title, file: path, line: i + 1, excerpt: line.trim().slice(0, 160) });

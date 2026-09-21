@@ -32,7 +32,7 @@ Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#data).
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, section, hosts, permissions, settings |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `fixtures.json` | Sample answers for Fixtures mode. First match wins, `*` matches anything |
 
 ## Make it yours
@@ -47,7 +47,7 @@ node playground/server.mjs --plugin ../my-plugin
 Then:
 
 1. In `promptops-plugin.json` replace the host with the one of your API. Add `secrets` and a `secret` field if it needs a key.
-2. In `dist/plugin.js` describe your resources in `RESOURCES`: name, description, columns.
+2. In `src/plugin.js` describe your resources in `RESOURCES`: name, description, columns.
 3. Rewrite the request in `query()`. Always cap the number of rows with `limit`.
 4. Pick only the columns you need: every value is shown to the person as text.
 5. Record real answers into `fixtures.json`.

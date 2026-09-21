@@ -33,7 +33,7 @@ Exact shapes: [docs/CONTRACTS.md](../../docs/CONTRACTS.md#notify).
 | File | What it is |
 |---|---|
 | `promptops-plugin.json` | The manifest: id, section, hosts, permissions, settings |
-| `dist/plugin.js` | The plugin. One file, already built, no dependencies |
+| `src/plugin.js` | The source of the plugin. One file of plain JavaScript, no dependencies and no build step: what you read is what runs |
 | `fixtures.json` | Sample answers for Fixtures mode. First match wins, `*` matches anything |
 
 ## Make it yours
@@ -49,7 +49,7 @@ Then:
 
 1. In `promptops-plugin.json` replace `net:discord.com` with the host of your service.
 2. Keep `sessions:read`: without it your plugin receives no session events.
-3. In `dist/plugin.js` change `send()`. If the token goes in the URL, keep it as `{{secret:...}}` in the path or query. If it goes in a header, put the placeholder there.
+3. In `src/plugin.js` change `send()`. If the token goes in the URL, keep it as `{{secret:...}}` in the path or query. If it goes in a header, put the placeholder there.
 4. Choose the events you need and write one short message for each.
 5. Add settings for what people want to tune: only failures, a mention, a channel.
 

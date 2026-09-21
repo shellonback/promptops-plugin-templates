@@ -85,7 +85,7 @@ node playground/server.mjs --plugin ../my-plugin
 | File | What to change |
 |---|---|
 | `promptops-plugin.json` | Name, description, the hosts you call, the settings people fill in |
-| `dist/plugin.js` | The calls to your service and the mapping to the PromptOps shapes |
+| `src/plugin.js` | The calls to your service and the mapping to the PromptOps shapes |
 | `fixtures.json` | Sample answers from your service, so the plugin works offline |
 
 **4. Check it.**
@@ -135,7 +135,7 @@ Secrets typed in the playground stay in your browser tab and in the local server
 | Repository | Owner | Contains |
 |---|---|---|
 | This one | PromptOps | The seven templates, the playground, the tools and the contracts |
-| Your plugin | **You** | Only your plugin: `promptops-plugin.json`, `dist/plugin.js`, `fixtures.json`, your README |
+| Your plugin | **You** | Only your plugin: `promptops-plugin.json`, `src/plugin.js`, `fixtures.json`, your README |
 
 The seven templates are in **one repository on purpose**. They share the playground, the SDK copy, the rules and the tools, so they cannot drift apart, and a change to a contract updates all of them in one commit.
 

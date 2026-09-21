@@ -10,20 +10,20 @@
       "description": "Brings the tasks of your ClickUp lists into the Teams board and keeps their status in sync.",
       "repo_url": "https://github.com/shellonback/promptops-plugin-clickup",
       "status": "published",
-      "version": "0.1.0",
-      "commit_sha": "8b72236400f86d61a46cdac526c792b3b6f90657",
+      "version": "0.1.1",
+      "commit_sha": "ca2455e450da83779b67f2f397a9f968f3596339",
       "bundle_sha256": "67c70bb6b74c6be1b8e373e73f700db65fc90413851790305478a2cfa5f7b877",
       "source_dir": null,
       "manifest": {
         "schemaVersion": 1,
         "id": "promptops.clickup",
         "name": "ClickUp",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "category": "tasks",
         "description": "Brings the tasks of your ClickUp lists into the Teams board and keeps their status in sync.",
         "repository": "https://github.com/shellonback/promptops-plugin-clickup",
         "minAppVersion": "2.1.0",
-        "entry": "dist/plugin.js",
+        "entry": "src/plugin.js",
         "permissions": [
           "net:api.clickup.com",
           "secrets",
@@ -65,7 +65,7 @@
         "kind": "team",
         "verified": true
       },
-      "updated_at": "2026-09-20T20:11:46.000Z"
+      "updated_at": "2026-09-21T12:17:14.000Z"
     },
     {
       "plugin_id": "promptops.git-writer",
@@ -75,20 +75,20 @@
       "description": "Turns your notes and the git activity of a repository into an email, documentation, a changelog, a status report or a handover, and saves it in docs/.",
       "repo_url": "https://github.com/shellonback/promptops-plugin-git-writer",
       "status": "published",
-      "version": "0.1.1",
-      "commit_sha": "8c34910b021d0ad12703b12998902e21e8c94a62",
+      "version": "0.1.2",
+      "commit_sha": "1fcb02069634d14fc22226b32ed990c552b213ed",
       "bundle_sha256": "f1f544909bf14b26864850d678f71d2b5e62dffb7ee13fd8a806d77dff2de02e",
       "source_dir": null,
       "manifest": {
         "schemaVersion": 1,
         "id": "promptops.git-writer",
         "name": "AI Git Writer",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "category": "pages",
         "description": "Turns your notes and the git activity of a repository into an email, documentation, a changelog, a status report or a handover, and saves it in docs/.",
         "repository": "https://github.com/shellonback/promptops-plugin-git-writer",
         "minAppVersion": "2.1.0",
-        "entry": "dist/plugin.js",
+        "entry": "src/plugin.js",
         "permissions": [
           "git:read",
           "workspace:write",
@@ -114,7 +114,7 @@
         "kind": "team",
         "verified": true
       },
-      "updated_at": "2026-09-20T22:27:18.000Z"
+      "updated_at": "2026-09-21T12:17:16.000Z"
     },
     {
       "plugin_id": "promptops.agent-evals",
@@ -124,20 +124,20 @@
       "description": "Measures how fast your AI models really answer, through the same CLI you use every day, and compares each one with its expected range and with your own history.",
       "repo_url": "https://github.com/shellonback/promptops-plugin-agent-evals",
       "status": "published",
-      "version": "0.1.0",
-      "commit_sha": "8afe52e82f7ab32c684d0aec9240f583f55c29d4",
+      "version": "0.1.1",
+      "commit_sha": "6eebb52efbfca06fec0da32e48a257ca0ace03dc",
       "bundle_sha256": "8da3401d69700c932e7c92393410d1fbf4449d24f0ab05d0738bce12c06669eb",
       "source_dir": null,
       "manifest": {
         "schemaVersion": 1,
         "id": "promptops.agent-evals",
         "name": "AI Agent Evals",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "category": "pages",
         "description": "Measures how fast your AI models really answer, through the same CLI you use every day, and compares each one with its expected range and with your own history.",
         "repository": "https://github.com/shellonback/promptops-plugin-agent-evals",
         "minAppVersion": "2.1.0",
-        "entry": "dist/plugin.js",
+        "entry": "src/plugin.js",
         "permissions": [
           "ai:benchmark",
           "storage"
@@ -162,7 +162,7 @@
         "kind": "team",
         "verified": true
       },
-      "updated_at": "2026-09-21T07:40:31.000Z"
+      "updated_at": "2026-09-21T12:17:18.000Z"
     }
   ]
 }

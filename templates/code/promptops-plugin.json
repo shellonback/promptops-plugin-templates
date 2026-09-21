@@ -6,7 +6,7 @@
   "category": "code",
   "description": "Shows open pull requests and their CI checks next to your sessions.",
   "minAppVersion": "2.1.0",
-  "entry": "dist/plugin.js",
+  "entry": "src/plugin.js",
   "permissions": ["net:api.github.com", "secrets"],
   "config": {
     "fields": [

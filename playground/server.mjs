@@ -8,13 +8,14 @@
 // applying the same rules as the real desktop runtime. It binds to 127.0.0.1 only.
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { lookup } from 'node:dns/promises';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  FORBIDDEN_REQUEST_HEADERS, RESPONSE_HEADERS, isForbiddenIp, resolveUrl, scanSource, scrubSecrets, sha256, substituteSecrets, validDocsPath, validateManifest,
+  FORBIDDEN_REQUEST_HEADERS, RESPONSE_HEADERS, isForbiddenIp, resolveUrl, scanSource, scrubSecrets, sha256, sourceVisibilityWarning, substituteSecrets, validDocsPath, validateManifest,
 } from './lib/policy.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -48,6 +49,8 @@ async function loadPlugin(name) {
   if (!dir) throw new Error('unknown plugin folder: ' + name);
   const manifest = JSON.parse(await readFile(join(dir, MANIFEST), 'utf8'));
   const validation = validateManifest(manifest);
+  const hidden = sourceVisibilityWarning(manifest.entry, (name) => existsSync(join(dir, name)));
+  if (hidden) validation.warnings.push(hidden);
   let bundle = '';
   let bundleSha256 = null;
   const findings = [];
